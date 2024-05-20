@@ -1,9 +1,11 @@
 //
-// Created by hugol on 5/20/2024.
+// Created by hugo on 5/20/2024.
 //
 
 #include <cstdio>
 #include <algorithm>
+#include <windows.h>
+#include <iostream>
 
 int main(int argc, char *argv[]) {
 
@@ -13,10 +15,13 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         path = argv[1];
     } else {
-        path = "../icon.png";
+        path = "icon.png";
     }
 
-    FILE *file = fopen("icondebug.png", "rb");
+
+    std::printf("Trying to open file at: %s\n", path);  // Debug statement to print the path
+
+    FILE *file = std::fopen(path, "rb");
     if (file == nullptr) {
         std::perror("Could not open file");
         return 1;
