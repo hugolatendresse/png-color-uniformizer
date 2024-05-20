@@ -87,11 +87,13 @@ int main(int argc, char *argv[]) {
     (chunk_header->data_size));
 
     std::cout << "Chunk data_size: " << chunk_header->data_size << std::endl;
-//    std::cout << "Chunk type: " << chunk_header->type << std::endl;
+    std::cout << "Chunk type: " << chunk_header->type << std::endl;
 
     // Create first chunk
     Chunk *chunk = static_cast<Chunk *>(malloc(sizeof(Chunk)));
     chunk->header = chunk_header;
+
+    // TODO refactor into a select statement
     if (strcmp(chunk->header->type, "IHDR") == 0) {
         std::fread(&(chunk->ihdr), sizeof(chunk->ihdr), 1, file);
         switch_endianness((char *)&(chunk->ihdr.height), sizeof(chunk->ihdr.height));
@@ -103,17 +105,45 @@ int main(int argc, char *argv[]) {
         std::cout << "compress_method: " << (int)(chunk->ihdr.compress_method) << std::endl;
         std::cout << "filter_method: " << (int)(chunk->ihdr.filter_method) << std::endl;
         std::cout << "interlace_method: " << (int)(chunk->ihdr.interlace_method) << std::endl;
-    } else if (strcmp(chunk->header->type, "IDAT") == 0) {
+    } else if (strcmp(chunk->header->type, "PLTE") == 0) {
+        std::cout << "reached PLTE" << std::endl;
         // TODO
 //        chunk->standard.data_content =static_cast<char *>(calloc(1, chunk->header->data_size));
 //        for(size_t i = 0; i < chunk->header->data_size; i++) {
 //            std:fread(chunk->data_content + i, 1, 1, file);
 //        }
-    } else if (strcmp(chunk->header->type, "IEND") == 0) {
+    } else if (strcmp(chunk->header->type, "IDAT") == 0) {
+        std::cout << "reached IDAT" << std::endl;
         // TODO
 //        chunk->standard.data_content =static_cast<char *>(calloc(1, chunk->header->data_size));
+//        for(size_t i = 0; i < chunk->header->data_size; i++) {
+//            std:fread(chunk->data_content + i, 1, 1, file);
+//        }
+    } else if (strcmp(chunk->header->type, "tRNS") == 0) {
+        std::cout << "reached tRNS" << std::endl;
+        // TODO
+//        }
+    } else if (strcmp(chunk->header->type, "gAMA") == 0) {
+        std::cout << "reached gAMA" << std::endl;
+        // TODO
+//        }
+    } else if (strcmp(chunk->header->type, "IEND") == 0) {
+        std::cout << "reached IEND" << std::endl;
+        fclose(file);
+    } else {
+        std::cout << "reached unknown chunk: " << chunk->header->type << std::endl;
     }
 
+    // In my case, I have color_type == 6, which means Each pixel is an R,G,B triple, followed by
+    // an alpha sample.
+    // I'll have to generalize that for other possible color types
+    assert(chunk->ihdr.color_type == 6);
+
+    // Only compression method currently defined for png is 0 (deflate/inflat compression)
+    assert(chunk->ihdr.compress_method == 0);
+
+    // Only filter method currently defined for png is 0 (adaptive filtering with five basic filter types)
+    assert(chunk->ihdr.filter_method == 0);
 
 
 
