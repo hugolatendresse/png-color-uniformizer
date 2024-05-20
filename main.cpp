@@ -80,39 +80,40 @@ int main(int argc, char *argv[]) {
 
     // Read first chunk_header
     ChunkHeader *chunk_header = static_cast<ChunkHeader *>(malloc(sizeof(ChunkHeader)));
-    std::fread(chunk_header, sizeof(ChunkHeader), 1, file);
+    std::fread(&(chunk_header->data_size), sizeof(chunk_header->data_size), 1, file);
+    std::fread(&(chunk_header->type), sizeof(chunk_header->type) - 1, 1, file);
     chunk_header->type[4] = '\0';
     switch_endianness((char *)(&(chunk_header->data_size)), (int)sizeof
     (chunk_header->data_size));
 
     std::cout << "Chunk data_size: " << chunk_header->data_size << std::endl;
-    std::cout << "Chunk type: " << chunk_header->type << std::endl;
+//    std::cout << "Chunk type: " << chunk_header->type << std::endl;
 
     // Create first chunk
     Chunk *chunk = static_cast<Chunk *>(malloc(sizeof(Chunk)));
     chunk->header = chunk_header;
     if (strcmp(chunk->header->type, "IHDR") == 0) {
         std::fread(&(chunk->ihdr), sizeof(chunk->ihdr), 1, file);
+        switch_endianness((char *)&(chunk->ihdr.height), sizeof(chunk->ihdr.height));
+        switch_endianness((char *)&(chunk->ihdr.width), sizeof(chunk->ihdr.width));
         std::cout << "width: " << chunk->ihdr.width << std::endl;
         std::cout << "height: " << chunk->ihdr.height << std::endl;
-        std::cout << "bit_depth: " << chunk->ihdr.bit_depth << std::endl;
-        std::cout << "color_type: " << chunk->ihdr.color_type << std::endl;
-        std::cout << "compress_method: " << chunk->ihdr.compress_method << std::endl;
-        std::cout << "filter_method: " << chunk->ihdr.filter_method << std::endl;
-        std::cout << "interlace_method: " << chunk->ihdr.interlace_method << std::endl;
+        std::cout << "bit_depth: " << (int)(chunk->ihdr.bit_depth) << std::endl;
+        std::cout << "color_type: " << (int)(chunk->ihdr.color_type) << std::endl;
+        std::cout << "compress_method: " << (int)(chunk->ihdr.compress_method) << std::endl;
+        std::cout << "filter_method: " << (int)(chunk->ihdr.filter_method) << std::endl;
+        std::cout << "interlace_method: " << (int)(chunk->ihdr.interlace_method) << std::endl;
     } else if (strcmp(chunk->header->type, "IDAT") == 0) {
         // TODO
+//        chunk->standard.data_content =static_cast<char *>(calloc(1, chunk->header->data_size));
+//        for(size_t i = 0; i < chunk->header->data_size; i++) {
+//            std:fread(chunk->data_content + i, 1, 1, file);
+//        }
     } else if (strcmp(chunk->header->type, "IEND") == 0) {
         // TODO
+//        chunk->standard.data_content =static_cast<char *>(calloc(1, chunk->header->data_size));
     }
 
-
-
-    chunk->data_content =static_cast<char *>(calloc(1, chunk->header->data_size));
-
-    for(size_t i = 0; i < chunk->header->data_size; i++) {
-        std:fread(chunk->data_content + i, 1, 1, file);
-    }
 
 
 
