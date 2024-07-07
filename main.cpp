@@ -414,19 +414,17 @@ int main(int argc, char *argv[]) {
         // TODO parametrize all 128 and stuff
         // TODO figure out why (128*4+1) doesnt work as boundary for col below. Shouldn't it work??
         for (std::vector<unsigned char>::size_type col=1; col<(128*4+1); col+= 4) { // TODO parametrize all 128 and stuff
-            d4.insert(d4.end(),
-                decompressed_idat.data() + row*(128*4+1) + col,
-                decompressed_idat.data() + row*(128*4+1) +col + 4);
-
-
-            // TODO
-            // std::vector<unsigned char> pixel(decompressed_idat.data() + row + col,
-            //                                  decompressed_idat.data() + row + col + 4);
-            // // pixel[0] = (pixel[0] + 0) % 25;
-            // pixel[1] = (pixel[1] + 0) % 25;
-            // pixel[2] = (pixel[2] + 0) % 25;
-            // pixel[3] = (pixel[3] - 100) % 25;
-            // d4.insert(d4.end(), pixel.begin(), pixel.end());
+            // d4.insert(d4.end(),
+            //     decompressed_idat.data() + row*(128*4+1) + col,
+            //     decompressed_idat.data() + row*(128*4+1) +col + 4);
+            //
+            std::vector<unsigned char> pixel(decompressed_idat.data() + row * (128 * 4 + 1) + col,
+                                             decompressed_idat.data() + row * (128 * 4 + 1) + col + 4);
+            pixel[0] = (pixel[0] + 0) % 256;
+            pixel[1] = (pixel[1] + 0) % 256;
+            pixel[2] = (pixel[2] + 0) % 256;
+            pixel[3] = (pixel[3] + 0) % 256;
+            d4.insert(d4.end(), pixel.begin(), pixel.end());
         }
     }
 
