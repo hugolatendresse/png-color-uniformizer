@@ -8,10 +8,15 @@
 #include <cassert>
 #include <cstring>
 
-// TODO ok to iterate twice, but now need to implement the IDAT logic (row 139)
-
-
 #define SIGNATURE_LENGTH 8
+
+/*Globals*/
+// TODO refactor as attributes in OOP
+char color_type = -1;
+char compression_method = -1;
+char filtering_method = -1;
+char interlacing_method = -1;
+
 
 bool is_png(unsigned char *signature) {
     unsigned char expected_signature[] = {137, 80, 78, 71, 13, 10, 26, 10};
@@ -37,7 +42,6 @@ typedef struct ChunkStandard_ {
 } ChunkStandard;
 
 typedef struct DataIHDR_ {
-//    ChunkHeader *header;  // TODO can probably delete
     int width;
     int height;
     char bit_depth;
@@ -45,7 +49,6 @@ typedef struct DataIHDR_ {
     char compress_method;
     char filter_method;
     char interlace_method;
-//    unsigned int crc;  // TODO can probably delete
 } DataIHDR;
 
 
@@ -62,6 +65,94 @@ void switch_endianness(char *p, int byte_cnt) {
     char buffer[byte_cnt];
     switch_endianness(p, buffer, byte_cnt);
     memcpy(p, buffer, byte_cnt);
+}
+
+// TODO refactor as OOP!
+
+void print_rgb_info() {
+    std::cout << "Pixel is represented by three samples: red (zero = black, max = red) "
+                 "appears first, then green (zero = black, max = green), then blue "
+                 "(zero = black, max = blue). The bit depth specifies the size of each "
+                 "sample, not the total pixel size" << std::endl;
+}
+
+void print_alpha_info() {
+    std::cout << "An alpha value of zero represents full transparency, and a value of "
+                 "2^bitdepth represents a fully opaque pixel. " << std::endl;
+}
+
+void set_color_type(char color_type_input) {
+    color_type = color_type_input;
+    std::cout << std::endl << "Color type " << static_cast<int>(color_type) << " info:" <<
+    std::endl;
+    switch(color_type) {
+        case 0:
+            std::cout << "Each pixel is a grayscale sample." << std::endl;
+            break;
+        case 2:
+            std::cout << "Each pixel is an R,G,B triple." << std::endl;
+            print_rgb_info();
+            break;
+        case 3:
+            std::cout << "Each pixel is a palette index; a PLTE chunk must appear." << std::endl;
+            break;
+        case 4:
+            std::cout << "Each pixel is a grayscale sample, followed by an alpha sample." << std::endl;
+            print_alpha_info();
+            break;
+        case 6:
+            std::cout << "Each pixel is an R,G,B triple, followed by an alpha sample." << std::endl;
+            print_rgb_info();
+            print_alpha_info();
+            break;
+    }
+}
+
+void set_compression_method(char compression_input) {
+    compression_method = compression_input;
+    std::cout << std::endl << "Compression type " << static_cast<int>(compression_method)
+    << " info:" << std::endl;
+    switch(compression_method) {
+        case 0:
+            std::cout << "Deflate/inflate compression with a sliding window of at most 32768 "
+                         "bytes" << std::endl;
+            break;
+        default:
+            std::cerr << "Unknown compression type. PNG supports only method 0." << std::endl;
+            exit(EXIT_FAILURE);
+            break;
+    }
+}
+void set_filtering_method(char filtering_input) {
+    filtering_method = filtering_input;
+    std::cout << std::endl << "Filtering type " << static_cast<int>(filtering_method) << " info:"
+    << std::endl;
+    switch(filtering_method) {
+        case 0:
+            std::cout << "None() filter, the scanline is transmitted unmodified;\n"
+                         "It is necessary only to insert a filter-type byte before the data." <<
+                         std::endl;
+            break;
+        default:
+            std::cerr << "Filtering method not yet supported by this tool" << std::endl;
+            exit(EXIT_FAILURE);
+    }
+}
+
+void set_interlacing_method(char interlacing_input) {
+    interlacing_method = interlacing_input;
+    std::cout << std::endl << "Interlacing type " << static_cast<int>(interlacing_method)
+    << " info:" << std::endl;
+    switch(interlacing_method) {
+        case 0:
+            std::cout << "With interlace method 0, pixels are stored sequentially from left to "
+                         "right, and scanlines sequentially from top to bottom (no interlacing)." <<
+                         std::endl;
+            break;
+        default:
+            std::cerr << "Interlacing method not yet supported by this tool" << std::endl;
+            exit(EXIT_FAILURE);
+    }
 }
 
 
@@ -110,7 +201,6 @@ int main(int argc, char *argv[]) {
             Compression method: 1 byte
             Filter method:      1 byte
             Interlace method:   1 byte
-            Width and height give the image dim
             */
             DataIHDR *data_ihdr = static_cast<DataIHDR *>(malloc(sizeof(DataIHDR)));
             std::fread(&(data_ihdr->width), sizeof(data_ihdr->width), 1, file);
@@ -129,6 +219,11 @@ int main(int argc, char *argv[]) {
             std::cout << "compress_method: " << (int) (data_ihdr->compress_method) << std::endl;
             std::cout << "filter_method: " << (int) (data_ihdr->filter_method) << std::endl;
             std::cout << "interlace_method: " << (int) (data_ihdr->interlace_method) << std::endl;
+
+            set_color_type(data_ihdr->color_type);
+            set_compression_method(data_ihdr->compress_method);
+            set_filtering_method(data_ihdr->filter_method);
+            set_interlacing_method(data_ihdr->interlace_method);
 
             // In my case, I have color_type == 6, which means Each pixel is an R,G,B triple, followed by
             // an alpha sample.
@@ -168,10 +263,10 @@ int main(int argc, char *argv[]) {
 
             std::cout << "reached IDAT" << std::endl;
             // TODO
-            //        chunk->standard.data_content =static_cast<char *>(calloc(1, chunk_header->data_size));
-            //        for(size_t i = 0; i < chunk_header->data_size; i++) {
-            //            std:fread(chunk->data_content + i, 1, 1, file);
-            //        }
+            char *data_content =static_cast<char *>(calloc(1, chunk_header->data_size));
+            for(size_t i = 0; i < chunk_header->data_size; i++) {
+                std::fread(data_content + i, 1, 1, file);
+            }
         } else if (strcmp(chunk_header->type, "sRGB") == 0) {
             /*
             The sRGB chunk contains:
