@@ -390,7 +390,7 @@ int main(int argc, char *argv[]) {
         free(chunk_header);
 
     }
-
+    // TODO fix having both decompressed_idat and uncompressed_idat
     std::cout << "Now need to unpack the IDAT data" << std::endl;
 
     std::vector<unsigned char> decompressed_idat;
@@ -420,7 +420,7 @@ int main(int argc, char *argv[]) {
     // std::vector<unsigned char> decompressed_idat2(decompressed_idat);
 
 
-    std::vector<unsigned char> decompressed_idat2(128 * (128*4 + 1));
+    std::vector<unsigned char> d2(128 * (128*4 + 1));
 
     // TODO
     // for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
@@ -429,10 +429,18 @@ int main(int argc, char *argv[]) {
     //         uncompressed_idat.data()+ i + 1);
     // }
 
+
+    // Works
     for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
-        decompressed_idat2[i] = decompressed_idat[i];
+        d2[i] = decompressed_idat[i];
     }
 
+    std::vector<unsigned char> d3;
+    for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
+        d3.insert(d3.end(), decompressed_idat.data() + i, decompressed_idat.data() + i + 1);
+    }
+
+    std::cout << "stop here";
 
     // decompressed_idat2 = decompress_idat;
     // std::vector<unsigned char>::size_type row_start = 0;
@@ -453,7 +461,7 @@ int main(int argc, char *argv[]) {
 
     // Create texture from raw pixel data
     SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
-    SDL_UpdateTexture(texture, NULL, decompressed_idat2.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
+    SDL_UpdateTexture(texture, NULL, d3.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
 
     // Main loop
     SDL_Event e;
