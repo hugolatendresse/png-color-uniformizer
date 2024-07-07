@@ -406,7 +406,8 @@ int main(int argc, char *argv[]) {
     std::vector<unsigned char> d4;
     for (std::vector<unsigned char>::size_type row=0; row<128; row++) {
         // TODO parametrize all 128 and stuff
-        for (std::vector<unsigned char>::size_type col=1; col<(128*4+1); col+= 4) { // TODO parametrize all 128 and stuff
+        // TODO col=4 seems to be giving the best results, meaning that I propably still don't understand someting re. endianness
+        for (std::vector<unsigned char>::size_type col=4; col<(128*4+1); col+= 4) { // TODO parametrize all 128 and stuff
             // d4.insert(d4.end(),
             //     decompressed_idat.data() + row*(128*4+1) + col,
             //     decompressed_idat.data() + row*(128*4+1) +col + 4);
@@ -421,13 +422,18 @@ int main(int argc, char *argv[]) {
 
             // TODO understand why the result when running is different from the original pic! Is decompression wrong?
 
-            unsigned char temp = pixel[0];
-            pixel[0] = pixel[3];
-            pixel[3] = temp;
+            // set all to black
+            pixel[0] = 0;
+            pixel[1] = 0;
+            pixel[2] = 0;
 
-            unsigned char temp2 = pixel[1];
-            pixel[1] = pixel[2];
-            pixel[2] = temp2;
+            // unsigned char temp = pixel[0];
+            // pixel[0] = pixel[3];
+            // pixel[3] = temp;
+            //
+            // unsigned char temp2 = pixel[1];
+            // pixel[1] = pixel[2];
+            // pixel[2] = temp2;
 
 
 
