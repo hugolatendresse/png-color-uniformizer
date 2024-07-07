@@ -402,13 +402,58 @@ int main(int argc, char *argv[]) {
     }
 
 
+    // TODO refactor like this with row_size
+    /*
+    std::vector<unsigned char>::size_type row_start = 0;
+    for (int row = 0; row < 128; row++) {
+        // row_start++;  // Skip the dummy filtering byte
+        std::vector<unsigned char>::size_type row_size = 128*4 + 1;
+        decompressed_idat2.insert(decompressed_idat2.end(),
+            uncompressed_idat.data() + row_start,
+            uncompressed_idat.data()+ row_start + row_size);
+        row_start += row_size;
+        // TODO parametrize all instances of 128
+    }
+    */
+
+
+    // std::vector<unsigned char> decompressed_idat2(decompressed_idat);
+
+
+    std::vector<unsigned char> decompressed_idat2(128 * (128*4 + 1));
+
+    // TODO
+    // for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
+    //     decompressed_idat2.insert(decompressed_idat2.end(),
+    //         uncompressed_idat.data() + i,
+    //         uncompressed_idat.data()+ i + 1);
+    // }
+
+    for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
+        decompressed_idat2[i] = decompressed_idat[i];
+    }
+
+
+    // decompressed_idat2 = decompress_idat;
+    // std::vector<unsigned char>::size_type row_start = 0;
+    // for (int row = 0; row < 128; row++) {
+    // // row_start++;  // Skip the dummy filtering byte
+    // std::vector<unsigned char>::size_type row_size = 128*4 + 1;
+    // decompressed_idat2.insert(decompressed_idat2.end(),
+    // uncompressed_idat.data() + row_start,
+    // uncompressed_idat.data()+ row_start + row_size);
+    // row_start += row_size;
+    // // TODO parametrize all instances of 128
+    // }
+
+
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Image Display", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     // Create texture from raw pixel data
     SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
-    SDL_UpdateTexture(texture, NULL, decompressed_idat.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
+    SDL_UpdateTexture(texture, NULL, decompressed_idat2.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
 
     // Main loop
     SDL_Event e;
