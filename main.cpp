@@ -159,21 +159,22 @@ void set_interlacing_method(char interlacing_input) {
 
 // Passing compressed_data by reference. Avoids having to copy. Still can't modify the data since
 // it's const
-std::vector<unsigned char> decompress_idat(const std::vector<unsigned char>& compressed_data) {
+std::vector<unsigned char> decompress_idat(const std::vector<unsigned char>& compressed) {
     z_stream strm = {};
-    strm.total_in = strm.avail_in = compressed_data.size();
-    strm.next_in = (Bytef*)compressed_data.data();
+    strm.total_in = strm.avail_in = compressed.size();
+    strm.next_in = (Bytef*)compressed.data();
 
     // Initialize the output buffer with a guess of the size of the decompressed data
-    std::vector<unsigned char> decompressedData(16384 * 4); // Initial buffer size for 128x128 RGBA image
+    std::vector<unsigned char> decompressed(128 * (128 * 4 + 1)); // Initial buffer size for 128x128 RGBA image
+    // TODO parametrize the above
 
     // Initialize the zlib decompression stream
     inflateInit(&strm);
 
     int ret;
     do {
-        strm.avail_out = decompressedData.size() - strm.total_out;
-        strm.next_out = (Bytef*)(decompressedData.data() + strm.total_out);
+        strm.avail_out = decompressed.size() - strm.total_out;
+        strm.next_out = (Bytef*)(decompressed.data() + strm.total_out);
 
         ret = inflate(&strm, Z_NO_FLUSH);
         assert(ret != Z_STREAM_ERROR);  // State not clobbered
@@ -189,15 +190,15 @@ std::vector<unsigned char> decompress_idat(const std::vector<unsigned char>& com
 
         if (strm.avail_out == 0) {
             // Output buffer was too small, increase the buffer size
-            decompressedData.resize(decompressedData.size() * 2);
+            decompressed.resize(decompressed.size() * 2);
         }
     } while (ret != Z_STREAM_END);
 
     // Clean up and calculate the final size
     inflateEnd(&strm);
-    decompressedData.resize(strm.total_out);
+    decompressed.resize(strm.total_out);
 
-    return decompressedData;
+    return decompressed;
 }
 
 
@@ -401,18 +402,10 @@ int main(int argc, char *argv[]) {
         std::cerr << "Decompression failed: " << e.what() << std::endl;
     }
 
-
-    // Ignore the filtering bytes
-    std::vector<unsigned char> d3;
-    for (std::size_t i=1; i<128 * (128*4 + 1); i+= 128*4+1) { // TODO parametrize all 128 and stuff
-        d3.insert(d3.end(), decompressed_idat.data() + i, decompressed_idat.data() + i + 128*4);
-    }
-
-    // Ignore the filtering bytes - but do it pixel by pixel
+    // Ignore the filtering bytes - but do it pixel by pixel to be able to change pixels
     std::vector<unsigned char> d4;
     for (std::vector<unsigned char>::size_type row=0; row<128; row++) {
         // TODO parametrize all 128 and stuff
-        // TODO figure out why (128*4+1) doesnt work as boundary for col below. Shouldn't it work??
         for (std::vector<unsigned char>::size_type col=1; col<(128*4+1); col+= 4) { // TODO parametrize all 128 and stuff
             // d4.insert(d4.end(),
             //     decompressed_idat.data() + row*(128*4+1) + col,
@@ -420,11 +413,59 @@ int main(int argc, char *argv[]) {
             //
             std::vector<unsigned char> pixel(decompressed_idat.data() + row * (128 * 4 + 1) + col,
                                              decompressed_idat.data() + row * (128 * 4 + 1) + col + 4);
+            // R G B Alpha
             pixel[0] = (pixel[0] + 0) % 256;
             pixel[1] = (pixel[1] + 0) % 256;
             pixel[2] = (pixel[2] + 0) % 256;
             pixel[3] = (pixel[3] + 0) % 256;
-            pixel[3] = 55;
+
+            // TODO understand why the result when running is different from the original pic! Is decompression wrong?
+
+            unsigned char temp = pixel[0];
+            pixel[0] = pixel[3];
+            pixel[3] = temp;
+
+            unsigned char temp2 = pixel[1];
+            pixel[1] = pixel[2];
+            pixel[2] = temp2;
+
+
+
+            // This is used to accentuate all colors
+            if (pixel[3] > 0) {
+                pixel[3] = 255;
+            }
+
+
+            //     // Force transparancy
+            // if (pixel[3] == 0) {
+            //     pixel[0] = UCHAR_MAX;
+            //     pixel[1] = UCHAR_MAX;
+            //     pixel[2] = UCHAR_MAX;
+            //     pixel[3] = UCHAR_MAX;
+            // }
+
+            // // Can be used to check who has pixel 0
+            // if (pixel[3] == 0) {
+            //     pixel[0] = 250;
+            //     pixel[1] = 10;
+            //     pixel[2] = 0;
+            //     pixel[3] = 0;
+            // } else {
+            //     // pixel[0] = 250;
+            //     // pixel[1] = 10;
+            //     // pixel[2] = 0;
+            //     // pixel[3] = 100;
+            // }
+
+
+
+            // Invert everything
+            // pixel[0] = UCHAR_MAX - pixel[0];
+            // pixel[1] = UCHAR_MAX - pixel[1];
+            // pixel[2] = UCHAR_MAX - pixel[2];
+            // pixel[3] = UCHAR_MAX - pixel[3];
+
             d4.insert(d4.end(), pixel.begin(), pixel.end());
         }
     }
@@ -440,6 +481,9 @@ int main(int argc, char *argv[]) {
     SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
     SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
     SDL_UpdateTexture(texture, NULL, d4.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
+
+    // Set renderer background color to white
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // RGBA
 
     // Main loop
     SDL_Event e;
