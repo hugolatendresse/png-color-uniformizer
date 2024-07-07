@@ -402,67 +402,34 @@ int main(int argc, char *argv[]) {
     }
 
 
-    // TODO refactor like this with row_size
-    /*
-    std::vector<unsigned char>::size_type row_start = 0;
-    for (int row = 0; row < 128; row++) {
-        // row_start++;  // Skip the dummy filtering byte
-        std::vector<unsigned char>::size_type row_size = 128*4 + 1;
-        decompressed_idat2.insert(decompressed_idat2.end(),
-            uncompressed_idat.data() + row_start,
-            uncompressed_idat.data()+ row_start + row_size);
-        row_start += row_size;
-        // TODO parametrize all instances of 128
-    }
-    */
-
-
-    // std::vector<unsigned char> decompressed_idat2(decompressed_idat);
-
-
-    std::vector<unsigned char> d2(128 * (128*4 + 1));
-
-    // TODO
-    // for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
-    //     decompressed_idat2.insert(decompressed_idat2.end(),
-    //         uncompressed_idat.data() + i,
-    //         uncompressed_idat.data()+ i + 1);
-    // }
-
-
-    /*
-    // Works
-    for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
-        d2[i] = decompressed_idat[i];
-    }
-
-    // Works
+    // Ignore the filtering bytes
     std::vector<unsigned char> d3;
-    for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
-        d3.insert(d3.end(), decompressed_idat.data() + i, decompressed_idat.data() + i + 1);
-    }
-    */
-
-    std::vector<unsigned char> d3;
-    for (std::size_t i=1; i<128 * (128*4 + 1); i+= 128*4+1) {
+    for (std::size_t i=1; i<128 * (128*4 + 1); i+= 128*4+1) { // TODO parametrize all 128 and stuff
         d3.insert(d3.end(), decompressed_idat.data() + i, decompressed_idat.data() + i + 128*4);
     }
 
+    // Ignore the filtering bytes - but do it pixel by pixel
+    std::vector<unsigned char> d4;
+    for (std::vector<unsigned char>::size_type row=0; row<128; row++) {
+        // TODO parametrize all 128 and stuff
+        for (std::vector<unsigned char>::size_type col=1; col<(128*4); col+= 4) { // TODO parametrize all 128 and stuff
+            // std::vector<unsigned char> pixel(decompressed_idat.data() +row + col, decompressed_idat.data()+row + col +4);
+            // TODO use parentheses below;
+            // pixel[0] = pixel[0] + 0 % 256;
+            // pixel[1] = pixel[1] + 0 % 256;
+            // pixel[2] = pixel[2] + 0 % 256;
+            // pixel[3] = pixel[3] + 0 % 256;
+            // d4.insert(d4.end(), pixel.begin(), pixel.end());
+            d4.insert(d4.end(), decompressed_idat.data()+row+col,decompressed_idat.data()+row+col+4);
+        }
+    }
+
+
+
+
+
 
     std::cout << "stop here";
-
-    // decompressed_idat2 = decompress_idat;
-    // std::vector<unsigned char>::size_type row_start = 0;
-    // for (int row = 0; row < 128; row++) {
-    // // row_start++;  // Skip the dummy filtering byte
-    // std::vector<unsigned char>::size_type row_size = 128*4 + 1;
-    // decompressed_idat2.insert(decompressed_idat2.end(),
-    // uncompressed_idat.data() + row_start,
-    // uncompressed_idat.data()+ row_start + row_size);
-    // row_start += row_size;
-    // // TODO parametrize all instances of 128
-    // }
-
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Image Display", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
