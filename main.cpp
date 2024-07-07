@@ -412,15 +412,21 @@ int main(int argc, char *argv[]) {
     std::vector<unsigned char> d4;
     for (std::vector<unsigned char>::size_type row=0; row<128; row++) {
         // TODO parametrize all 128 and stuff
-        for (std::vector<unsigned char>::size_type col=1; col<(128*4); col+= 4) { // TODO parametrize all 128 and stuff
-            // std::vector<unsigned char> pixel(decompressed_idat.data() +row + col, decompressed_idat.data()+row + col +4);
-            // TODO use parentheses below;
-            // pixel[0] = pixel[0] + 0 % 256;
-            // pixel[1] = pixel[1] + 0 % 256;
-            // pixel[2] = pixel[2] + 0 % 256;
-            // pixel[3] = pixel[3] + 0 % 256;
+        // TODO figure out why (128*4+1) doesnt work as boundary for col below. Shouldn't it work??
+        for (std::vector<unsigned char>::size_type col=1; col<(128*4+1); col+= 4) { // TODO parametrize all 128 and stuff
+            d4.insert(d4.end(),
+                decompressed_idat.data() + row*(128*4+1) + col,
+                decompressed_idat.data() + row*(128*4+1) +col + 4);
+
+
+            // TODO
+            // std::vector<unsigned char> pixel(decompressed_idat.data() + row + col,
+            //                                  decompressed_idat.data() + row + col + 4);
+            // // pixel[0] = (pixel[0] + 0) % 25;
+            // pixel[1] = (pixel[1] + 0) % 25;
+            // pixel[2] = (pixel[2] + 0) % 25;
+            // pixel[3] = (pixel[3] - 100) % 25;
             // d4.insert(d4.end(), pixel.begin(), pixel.end());
-            d4.insert(d4.end(), decompressed_idat.data()+row+col,decompressed_idat.data()+row+col+4);
         }
     }
 
@@ -437,7 +443,7 @@ int main(int argc, char *argv[]) {
 
     // Create texture from raw pixel data
     SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
-    SDL_UpdateTexture(texture, NULL, d3.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
+    SDL_UpdateTexture(texture, NULL, d4.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
 
     // Main loop
     SDL_Event e;
