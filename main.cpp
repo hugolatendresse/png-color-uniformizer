@@ -9,6 +9,7 @@
 #include <cstring>
 #include <zlib.h>
 #include <vector>
+#include <SDL.h>  // TODO has to install this manually
 
 #define SIGNATURE_LENGTH 8
 
@@ -293,16 +294,17 @@ int main(int argc, char *argv[]) {
             /*
             The IDAT chunk contains the actual image data. To create this data:
 
-            Begin with image scanlines represented as described in Image layout; the layout and total size of this raw data are determined by the fields of IHDR.
-                    Filter the image data according to the filtering method specified by the IHDR chunk. (Note that with filter method 0, the only one currently defined, this implies prepending a filter-type byte to each scanline.)
+            Begin with image scanlines represented as described in Image layout; the layout and total
+             size of this raw data are determined by the fields of IHDR.
+            Filter the image data according to the filtering method specified by the IHDR chunk.
+            (Note that with filter method 0, the only one currently defined, this implies
+            prepending a filter-type byte to each scanline.)
             Compress the filtered data using the compression method specified by the IHDR chunk.
-                    The IDAT chunk contains the output datastream of the compression algorithm.
+            The IDAT chunk contains the output datastream of the compression algorithm.
 
-                    To read the image data, reverse this process.
+            To read the image data, reverse this process.
 
-                    There can be multiple IDAT chunks; if so, they must appear consecutively with no other intervening chunks. The compressed datastream is then the concatenation of the contents of all the IDAT chunks. The encoder can divide the compressed datastream into IDAT chunks however it wishes. (Multiple IDAT chunks are allowed so that encoders can work in a fixed amount of memory; typically the chunk size will correspond to the encoder's buffer size.) It is important to emphasize that IDAT chunk boundaries have no semantic significance and can occur at any point in the compressed datastream. A PNG file in which each IDAT chunk contains only one data byte is valid, though remarkably wasteful of space. (For that matter, zero-length IDAT chunks are valid, though even more wasteful.)
-
-            See Filter Algorithms and Deflate/Inflate Compression for details.
+            There can be multiple IDAT chunks; if so, they must appear consecutively with no other intervening chunks. The compressed datastream is then the concatenation of the contents of all the IDAT chunks. The encoder can divide the compressed datastream into IDAT chunks however it wishes. (Multiple IDAT chunks are allowed so that encoders can work in a fixed amount of memory; typically the chunk size will correspond to the encoder's buffer size.) It is important to emphasize that IDAT chunk boundaries have no semantic significance and can occur at any point in the compressed datastream. A PNG file in which each IDAT chunk contains only one data byte is valid, though remarkably wasteful of space. (For that matter, zero-length IDAT chunks are valid, though even more wasteful.)
             */
 
             std::cout << "reached IDAT" << std::endl;
@@ -398,6 +400,38 @@ int main(int argc, char *argv[]) {
     } catch (const std::runtime_error& e) {
         std::cerr << "Decompression failed: " << e.what() << std::endl;
     }
+
+
+    int main(int argc, char* argv[]) {
+        SDL_Init(SDL_INIT_VIDEO);
+        SDL_Window* window = SDL_CreateWindow("Image Display", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
+        SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+        // Create texture from raw pixel data
+        SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
+        SDL_UpdateTexture(texture, NULL, buffer, 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
+
+        // Main loop
+        SDL_Event e;
+        bool running = true;
+        while (running) {
+            while (SDL_PollEvent(&e)) {
+                if (e.type == SDL_QUIT) {
+                    running = false;
+                }
+            }
+            SDL_RenderClear(renderer);
+            SDL_RenderCopy(renderer, texture, NULL, NULL);
+            SDL_RenderPresent(renderer);
+        }
+
+        SDL_DestroyTexture(texture);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 0;
+    }
+
 
     return 0;
 
