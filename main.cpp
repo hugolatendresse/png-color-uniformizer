@@ -9,7 +9,7 @@
 #include <cstring>
 #include <zlib.h>
 #include <vector>
-#include <SDL.h>  // TODO has to install this manually
+#include <SDL.h>  // had to install this manually
 
 #define SIGNATURE_LENGTH 8
 
@@ -393,45 +393,41 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Now need to unpack the IDAT data" << std::endl;
 
-
+    std::vector<unsigned char> decompressed_idat;
     try {
-        auto decompressed_idat = decompress_idat(uncompressed_idat);
+        decompressed_idat = decompress_idat(uncompressed_idat);
         std::cout << "Decompressed successfully. Size: " << decompressed_idat.size() << " bytes" << std::endl;
     } catch (const std::runtime_error& e) {
         std::cerr << "Decompression failed: " << e.what() << std::endl;
     }
 
 
-    int main(int argc, char* argv[]) {
-        SDL_Init(SDL_INIT_VIDEO);
-        SDL_Window* window = SDL_CreateWindow("Image Display", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
-        SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* window = SDL_CreateWindow("Image Display", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
-        // Create texture from raw pixel data
-        SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
-        SDL_UpdateTexture(texture, NULL, buffer, 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
+    // Create texture from raw pixel data
+    SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
+    SDL_UpdateTexture(texture, NULL, decompressed_idat.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
 
-        // Main loop
-        SDL_Event e;
-        bool running = true;
-        while (running) {
-            while (SDL_PollEvent(&e)) {
-                if (e.type == SDL_QUIT) {
-                    running = false;
-                }
+    // Main loop
+    SDL_Event e;
+    bool running = true;
+    while (running) {
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_QUIT) {
+                running = false;
             }
-            SDL_RenderClear(renderer);
-            SDL_RenderCopy(renderer, texture, NULL, NULL);
-            SDL_RenderPresent(renderer);
         }
-
-        SDL_DestroyTexture(texture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 0;
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderPresent(renderer);
     }
 
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 
     return 0;
 

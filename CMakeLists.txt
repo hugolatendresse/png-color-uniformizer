@@ -7,7 +7,8 @@ add_executable(png_color_uniformizer main.cpp)
 
 # Need zlib library
 find_package(ZLIB REQUIRED)
+find_package(SDL2 REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
-target_link_libraries(png_color_uniformizer ${ZLIB_LIBRARIES})
+target_link_libraries(png_color_uniformizer ${ZLIB_LIBRARIES} SDL2::SDL2)
 message(STATUS "ZLIB_INCLUDE_DIRS: ${ZLIB_INCLUDE_DIRS}")
 message(STATUS "ZLIB_LIBRARIES: ${ZLIB_LIBRARIES}")
