@@ -424,23 +424,21 @@ int main(int argc, char *argv[]) {
             pixel[1] = (pixel[1] + 0) % 256;
             pixel[2] = (pixel[2] + 0) % 256;
             pixel[3] = (pixel[3] + 0) % 256;
+            pixel[3] = 55;
             d4.insert(d4.end(), pixel.begin(), pixel.end());
         }
     }
-
-
-
-
-
 
     std::cout << "stop here";
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("Image Display", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);  // Allow alpha values
 
     // Create texture from raw pixel data
     SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STATIC, 128, 128);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
     SDL_UpdateTexture(texture, NULL, d4.data(), 128 * 4); // Assuming 128x128 image with 4 bytes per pixel stride
 
     // Main loop
