@@ -430,15 +430,24 @@ int main(int argc, char *argv[]) {
     // }
 
 
+    /*
     // Works
     for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
         d2[i] = decompressed_idat[i];
     }
 
+    // Works
     std::vector<unsigned char> d3;
     for (std::size_t i=0; i<128 * (128*4 + 1); i++) {
         d3.insert(d3.end(), decompressed_idat.data() + i, decompressed_idat.data() + i + 1);
     }
+    */
+
+    std::vector<unsigned char> d3;
+    for (std::size_t i=1; i<128 * (128*4 + 1); i+= 128*4+1) {
+        d3.insert(d3.end(), decompressed_idat.data() + i, decompressed_idat.data() + i + 128*4);
+    }
+
 
     std::cout << "stop here";
 
