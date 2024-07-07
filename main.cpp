@@ -7,6 +7,8 @@
 #include <iostream>
 #include <cassert>
 #include <cstring>
+#include <zlib.h>
+#include <vector>
 
 #define SIGNATURE_LENGTH 8
 
@@ -16,7 +18,7 @@ char color_type = -1;
 char compression_method = -1;
 char filtering_method = -1;
 char interlacing_method = -1;
-
+std::vector<unsigned char> uncompressed_idat;
 
 bool is_png(unsigned char *signature) {
     unsigned char expected_signature[] = {137, 80, 78, 71, 13, 10, 26, 10};
@@ -26,7 +28,6 @@ bool is_png(unsigned char *signature) {
     }
     return true;
 }
-
 
 typedef struct ChunkHeader_ {
     unsigned int data_size;
@@ -155,6 +156,50 @@ void set_interlacing_method(char interlacing_input) {
     }
 }
 
+// Passing compressed_data by reference. Avoids having to copy. Still can't modify the data since
+// it's const
+std::vector<unsigned char> decompress_idat(const std::vector<unsigned char>& compressed_data) {
+    z_stream strm = {};
+    strm.total_in = strm.avail_in = compressed_data.size();
+    strm.next_in = (Bytef*)compressed_data.data();
+
+    // Initialize the output buffer with a guess of the size of the decompressed data
+    std::vector<unsigned char> decompressedData(16384 * 4); // Initial buffer size for 128x128 RGBA image
+
+    // Initialize the zlib decompression stream
+    inflateInit(&strm);
+
+    int ret;
+    do {
+        strm.avail_out = decompressedData.size() - strm.total_out;
+        strm.next_out = (Bytef*)(decompressedData.data() + strm.total_out);
+
+        ret = inflate(&strm, Z_NO_FLUSH);
+        assert(ret != Z_STREAM_ERROR);  // State not clobbered
+
+        switch (ret) {
+            case Z_NEED_DICT:
+                ret = Z_DATA_ERROR;     // And fall through
+            case Z_DATA_ERROR:
+            case Z_MEM_ERROR:
+                (void)inflateEnd(&strm);
+                throw std::runtime_error("Zlib decompression error");
+        }
+
+        if (strm.avail_out == 0) {
+            // Output buffer was too small, increase the buffer size
+            decompressedData.resize(decompressedData.size() * 2);
+        }
+    } while (ret != Z_STREAM_END);
+
+    // Clean up and calculate the final size
+    inflateEnd(&strm);
+    decompressedData.resize(strm.total_out);
+
+    return decompressedData;
+}
+
+
 
 int main(int argc, char *argv[]) {
     const char *path;
@@ -260,13 +305,13 @@ int main(int argc, char *argv[]) {
             See Filter Algorithms and Deflate/Inflate Compression for details.
             */
 
-
             std::cout << "reached IDAT" << std::endl;
-            // TODO
             char *data_content =static_cast<char *>(calloc(1, chunk_header->data_size));
             for(size_t i = 0; i < chunk_header->data_size; i++) {
                 std::fread(data_content + i, 1, 1, file);
             }
+            uncompressed_idat.insert(uncompressed_idat.end(), data_content,
+                                     data_content + chunk_header->data_size);
         } else if (strcmp(chunk_header->type, "sRGB") == 0) {
             /*
             The sRGB chunk contains:
@@ -343,6 +388,17 @@ int main(int argc, char *argv[]) {
         free(chunk_header);
 
     }
+
+    std::cout << "Now need to unpack the IDAT data" << std::endl;
+
+
+    try {
+        auto decompressed_idat = decompress_idat(uncompressed_idat);
+        std::cout << "Decompressed successfully. Size: " << decompressed_idat.size() << " bytes" << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cerr << "Decompression failed: " << e.what() << std::endl;
+    }
+
     return 0;
 
     // TODO: assert the following: IHDR must appear first and IEND must appear last;
