@@ -31,6 +31,9 @@ static void set_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel
 }
 
 int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format) {
+
+    // TODO implement options k r g b a as written in helper of main.c
+
     stride = get_RGBA_stride(width, row_stride);
 
     if (format != PNG_FORMAT_RGBA) {
