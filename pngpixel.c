@@ -25,6 +25,8 @@
 /* Normally use <png.h> here to get the installed libpng, but this is done to
  * ensure the code picks up the local libpng implementation:
  */
+#include <stdbool.h>
+
 #include "png.h"
 
 // TODO generalize for things other than RGBA
@@ -75,7 +77,7 @@ component(png_const_bytep row, png_uint_32 x, unsigned int c,
  */
 static void
 print_and_write_pixel(png_structp png_ptr, png_infop info_ptr, png_const_bytep row,
-                      png_uint_32 x, pixel *out) {
+                      png_uint_32 x, pixel *out, bool printflag) {
     unsigned int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
     switch (png_get_color_type(png_ptr, info_ptr)) {
@@ -130,10 +132,12 @@ print_and_write_pixel(png_structp png_ptr, png_infop info_ptr, png_const_bytep r
             out->b = component(row, x, 2, bit_depth, 4);
             out->a = component(row, x, 3, bit_depth, 4);
 
-            printf("RGBA %u %u %u %u\n", component(row, x, 0, bit_depth, 4),
-                   component(row, x, 1, bit_depth, 4),
-                   component(row, x, 2, bit_depth, 4),
-                   component(row, x, 3, bit_depth, 4));
+            if (printflag) {
+                printf("RGBA %u %u %u %u\n", component(row, x, 0, bit_depth, 4),
+                       component(row, x, 1, bit_depth, 4),
+                       component(row, x, 2, bit_depth, 4),
+                       component(row, x, 3, bit_depth, 4));
+            }
             return;
 
         default:
@@ -141,7 +145,7 @@ print_and_write_pixel(png_structp png_ptr, png_infop info_ptr, png_const_bytep r
     }
 }
 
-int get_one_pixel(long x,long y, char *filename, pixel *out) {
+int get_one_pixel(long pixelrow, long pixelcol, char *filename, pixel *out, bool printflag) {
     /* This program uses the default, <setjmp.h> based, libpng error handling
      * mechanism, therefore any local variable that exists before the call to
      * setjmp and is changed after the call to setjmp returns successfully must
@@ -285,14 +289,14 @@ int get_one_pixel(long x,long y, char *filename, pixel *out) {
                                  * are, of course, much better ways of doing this
                                  * than using a for loop:
                                  */
-                                if (y == py)
+                                if (pixelrow == py)
                                     for (px = xstart, ppx = 0;
                                          px < width; px += xstep, ++ppx)
-                                        if (x == px) {
+                                        if (pixelcol == px) {
                                             /* 'ppx' is the index of the pixel in the row
                                              * buffer.
                                              */
-                                            print_and_write_pixel(png_ptr, info_ptr, row_tmp, ppx, out);
+                                            print_and_write_pixel(png_ptr, info_ptr, row_tmp, ppx, out, printflag);
 
                                             /* Now terminate the loops early - we have
                                              * found and handled the required data.
@@ -348,24 +352,31 @@ int main(int argc, char *argv[]) {
 
         FILE *outfile = fopen("output.csv", "w");
 
+        for (int i=0; i<128; i++) {
+            fprintf(outfile, "%d,",i);
+        }
+
         for (long row = 0; row < height; row++) {
             for (long col = 0; col < width; col++) {
                 pixel *out = malloc(sizeof(pixel));
-                get_one_pixel(col, row, filename, out);
+                bool printflag = false;
+                // TODO: reading file every time right now. Decompose get_one_pixel and read file once
+                get_one_pixel(row, col, filename, out, printflag);
                 // fprintf(outfile, "%d,%d,%d,%d\n", out->r, out->g, out->b, out->a);
                 fprintf(outfile, "%hhu,", out->a);
             }
             fprintf(outfile, "\n");
         }
     }
-    if (argc == 4) {
+    else if (argc == 4) {
         char *filename = argv[1];
-        long x = atol(argv[1]);
-        long y = atol(argv[2]);
+        long pixelrow = atol(argv[2]);
+        long pixelcol = atol(argv[3]);
         pixel *out = malloc(sizeof(pixel));
-        get_one_pixel(x, y, filename, out);
+        bool printflag = true;
+        get_one_pixel(pixelrow, pixelcol, filename, out, printflag);
     } else {
-        fprintf(stderr, "pngpixel: usage: pngpixel x y png-file\n");
+        fprintf(stderr, "pngpixel: usage: pngpixel png-file row col\n");
     }
 
     return 0;
