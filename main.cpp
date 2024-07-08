@@ -19,7 +19,7 @@ char color_type = -1;
 char compression_method = -1;
 char filtering_method = -1;
 char interlacing_method = -1;
-std::vector<unsigned char> uncompressed_idat;
+std::vector<unsigned char> compressed_idat;
 
 bool is_png(unsigned char *signature) {
     unsigned char expected_signature[] = {137, 80, 78, 71, 13, 10, 26, 10};
@@ -170,6 +170,7 @@ std::vector<unsigned char> decompress_idat(const std::vector<unsigned char>& com
 
     // Initialize the zlib decompression stream
     inflateInit(&strm);
+    // inflateInit2(&strm, 0);
 
     int ret;
     do {
@@ -313,7 +314,7 @@ int main(int argc, char *argv[]) {
             for(size_t i = 0; i < chunk_header->data_size; i++) {
                 std::fread(data_content + i, 1, 1, file);
             }
-            uncompressed_idat.insert(uncompressed_idat.end(), data_content,
+            compressed_idat.insert(compressed_idat.end(), data_content,
                                      data_content + chunk_header->data_size);
         } else if (strcmp(chunk_header->type, "sRGB") == 0) {
             /*
@@ -396,7 +397,7 @@ int main(int argc, char *argv[]) {
 
     std::vector<unsigned char> decompressed_idat;
     try {
-        decompressed_idat = decompress_idat(uncompressed_idat);
+        decompressed_idat = decompress_idat(compressed_idat);
         std::cout << "Decompressed successfully. Size: " << decompressed_idat.size() << " bytes" << std::endl;
     } catch (const std::runtime_error& e) {
         std::cerr << "Decompression failed: " << e.what() << std::endl;
@@ -407,7 +408,7 @@ int main(int argc, char *argv[]) {
     for (std::vector<unsigned char>::size_type row=0; row<128; row++) {
         // TODO parametrize all 128 and stuff
         // TODO col=4 seems to be giving the best results, meaning that I propably still don't understand someting re. endianness
-        for (std::vector<unsigned char>::size_type col=4; col<(128*4+1); col+= 4) { // TODO parametrize all 128 and stuff
+        for (std::vector<unsigned char>::size_type col=1; col<(128*4+1); col+= 4) { // TODO parametrize all 128 and stuff
             // d4.insert(d4.end(),
             //     decompressed_idat.data() + row*(128*4+1) + col,
             //     decompressed_idat.data() + row*(128*4+1) +col + 4);
@@ -423,14 +424,15 @@ int main(int argc, char *argv[]) {
             // TODO understand why the result when running is different from the original pic! Is decompression wrong?
 
             // set all to black
-            pixel[0] = 0;
-            pixel[1] = 0;
-            pixel[2] = 0;
+            // pixel[0] = 0;
+            // pixel[1] = 0;
+            // pixel[2] = 0;
 
+            //swap first and last to check for endianness
             // unsigned char temp = pixel[0];
             // pixel[0] = pixel[3];
             // pixel[3] = temp;
-            //
+            // //
             // unsigned char temp2 = pixel[1];
             // pixel[1] = pixel[2];
             // pixel[2] = temp2;
@@ -438,9 +440,9 @@ int main(int argc, char *argv[]) {
 
 
             // This is used to accentuate all colors
-            if (pixel[3] > 0) {
-                pixel[3] = 255;
-            }
+            // if (pixel[3] > 0) {
+            //     pixel[3] = 255;
+            // }
 
 
             //     // Force transparancy
