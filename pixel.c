@@ -6,22 +6,10 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include <setjmp.h> /* required for error handling */
-
-/* Normally use <png.h> here to get the installed libpng, but this is done to
- * ensure the code picks up the local libpng implementation:
- */
+#include <setjmp.h>
 #include <stdbool.h>
-
 #include "png.h"
-
-// TODO generalize for things other than RGBA
-typedef struct pixel_ {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char a;
-} pixel;
+#include "uniformizer.h"
 
 /* Return component 'c' of pixel 'x' from the given row. */
 static unsigned int
@@ -63,7 +51,7 @@ component(png_const_bytep row, png_uint_32 x, unsigned int c,
  */
 static void
 print_and_write_pixel(png_structp png_ptr, png_infop info_ptr, png_const_bytep row,
-                      png_uint_32 x, pixel *out, bool printflag) {
+                      png_uint_32 x, RGBA_Pixel *out, bool printflag) {
     unsigned int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
     switch (png_get_color_type(png_ptr, info_ptr)) {
@@ -131,7 +119,7 @@ print_and_write_pixel(png_structp png_ptr, png_infop info_ptr, png_const_bytep r
     }
 }
 
-int get_one_pixel(long pixelrow, long pixelcol, char *filename, pixel *out, bool printflag) {
+int get_one_pixel(long pixelrow, long pixelcol, char *filename, RGBA_Pixel *out, bool printflag) {
     /* This program uses the default, <setjmp.h> based, libpng error handling
      * mechanism, therefore any local variable that exists before the call to
      * setjmp and is changed after the call to setjmp returns successfully must
@@ -344,7 +332,7 @@ int main(int argc, char *argv[]) {
 
         for (long row = 0; row < height; row++) {
             for (long col = 0; col < width; col++) {
-                pixel *out = malloc(sizeof(pixel));
+                RGBA_Pixel *out = malloc(sizeof(RGBA_Pixel));
                 bool printflag = false;
                 // TODO: reading file every time right now. Decompose get_one_pixel and read file once
                 get_one_pixel(row, col, filename, out, printflag);
@@ -358,7 +346,7 @@ int main(int argc, char *argv[]) {
         char *filename = argv[1];
         long pixelrow = atol(argv[2]);
         long pixelcol = atol(argv[3]);
-        pixel *out = malloc(sizeof(pixel));
+        RGBA_Pixel *out = malloc(sizeof(RGBA_Pixel));
         bool printflag = true;
         get_one_pixel(pixelrow, pixelcol, filename, out, printflag);
     } else {
