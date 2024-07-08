@@ -2,8 +2,16 @@
 #include <string.h>
 #include <stdio.h>
 #include "png.h"
+#include "uniformizer.h"
 
 // TODO try printing the buffer with SDL2
+
+
+int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format) {
+    // TODO implement transformation
+    return 1;
+}
+
 
 int main(int argc, const char **argv) {
     if (argc != 3) {
@@ -14,7 +22,6 @@ int main(int argc, const char **argv) {
     const char *file_in = argv[1];
     const char *file_out = argv[2];
     png_image image;
-    int res = 0;
 
     // Only the image structure version number needs to be set
     memset(&image, 0, sizeof image);
@@ -24,16 +31,16 @@ int main(int argc, const char **argv) {
     //  For a colormap format, a colormap will need to be supplied.
 
     // Read header
-    res = png_image_begin_read_from_file(&image, file_in);
+    int res = png_image_begin_read_from_file(&image, file_in);
     if (!res) {
         fprintf(stderr, "pngtopng: %s: %s\n", argv[1], image.message);
         exit(EXIT_FAILURE);
     }
 
     // Create buffer for image data
-    png_bytep buffer;
-    buffer = malloc(PNG_IMAGE_SIZE(image));
-    if (buffer == NULL) {
+    png_bytep idat_data;
+    idat_data = malloc(PNG_IMAGE_SIZE(image)); // Pointer to uncompressed IDAT data
+    if (idat_data == NULL) {
         fprintf(stderr, "Couldn't allocate %lu bytes for buffer\n",
                 (unsigned long) PNG_IMAGE_SIZE(image));
         png_image_free(&image); // No need to free elsewhere since ligpng does cleanup on error and success
@@ -44,24 +51,32 @@ int main(int argc, const char **argv) {
     png_const_colorp background = NULL;
     png_int_32 row_stride = 0;
     void *colormap = NULL;
-    res = png_image_finish_read(&image, background, buffer, row_stride, colormap);
+    res = png_image_finish_read(&image, background, idat_data, row_stride, colormap);
     if (!res) {
         fprintf(stderr, "Couldn't read %s: %s\n", argv[1], image.message);
-        free(buffer);
+        free(idat_data);
         exit(EXIT_FAILURE);
     }
 
     // Modify image
-    // TODO modify buffer here
+    res = transform(idat_data, image.height, image.width,  row_stride, image.format);
+    if (!res) {
+        fprintf(stderr, "Error while transforming image\n");
+        free(idat_data);
+        exit(EXIT_FAILURE);
+    }
+
+    // Print the image
+    display_image(image.height, image.width, idat_data);
 
     // Write image back
     int convert_to_8bit = 0;
-    res = png_image_write_to_file(&image, file_out, convert_to_8bit, buffer, row_stride, colormap);
+    res = png_image_write_to_file(&image, file_out, convert_to_8bit, idat_data, row_stride, colormap);
     if (!res) {
         fprintf(stderr, "Couldn't write %s\n", image.message);
-        free(buffer);
+        free(idat_data);
         exit(EXIT_FAILURE);
     }
-    free(buffer);
+    free(idat_data);
     return 0;
 }
