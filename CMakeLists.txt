@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 99)
 
 # Targets
 add_executable(manual manual.cpp)
-add_executable(pngpixel pngpixel.c)
+add_executable(pixel pixel.c)
 add_executable(pngtopng pngtopng.c)
 
 # Libraries
@@ -16,5 +16,5 @@ find_package(PNG REQUIRED)
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${PNG_INCLUDE_DIRS})
 target_link_libraries(manual ${ZLIB_LIBRARIES} SDL2::SDL2)
-target_link_libraries(pngpixel ${ZLIB_LIBRARIES} ${PNG_LIBRARIES})
+target_link_libraries(pixel ${ZLIB_LIBRARIES} ${PNG_LIBRARIES})
 target_link_libraries(pngtopng ${ZLIB_LIBRARIES} ${PNG_LIBRARIES})

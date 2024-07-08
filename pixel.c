@@ -1,22 +1,8 @@
-/*- pngpixel
+/* file: pngpixel.c
  *
- * COPYRIGHT: Written by John Cunningham Bowler, 2011.
- * To the extent possible under law, the author has waived all copyright and
- * related or neighboring rights to this work.  This work is published from:
- * United States.
+ * @brief
+ * This file allows to read one or all pixels from a PNG file.
  *
- * Read a single pixel value from a PNG file.
- *
- * This code illustrates basic 'by-row' reading of a PNG file using libpng.
- * Rows are read until a particular pixel is found; the value of this pixel is
- * then printed on stdout.
- *
- * The code illustrates how to do this on interlaced as well as non-interlaced
- * images.  Normally you would call png_set_interlace_handling() to have libpng
- * deal with the interlace for you, but that obliges you to buffer half of the
- * image to assemble the interlaced rows.  In this code
- * png_set_interlace_handling() is not called and, instead, the code handles the
- * interlace passes directly looking for the required pixel.
  */
 #include <stdlib.h>
 #include <stdio.h>

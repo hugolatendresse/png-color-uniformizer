@@ -1,27 +1,7 @@
-/*- pngtopng
- *
- * COPYRIGHT: Written by John Cunningham Bowler, 2011, 2017.
- * To the extent possible under law, the author has waived all copyright and
- * related or neighboring rights to this work.  This work is published from:
- * United States.
- *
- * Read a PNG and write it out in a fixed format, using the 'simplified API'
- * that was introduced in libpng-1.6.0.
- *
- * This sample code is just the code from the top of 'example.c' with some error
- * handling added.  See example.c for more comments.
- */
-#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-/* Normally use <png.h> here to get the installed libpng, but this is done to
- * ensure the code picks up the local libpng implementation:
- */
 #include "png.h"
-#if defined(PNG_SIMPLIFIED_READ_SUPPORTED) && \
-    defined(PNG_SIMPLIFIED_WRITE_SUPPORTED)
 
 int main(int argc, const char **argv)
 {
@@ -93,4 +73,3 @@ int main(int argc, const char **argv)
 
    return result;
 }
-#endif /* READ && WRITE */
