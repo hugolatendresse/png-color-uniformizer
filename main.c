@@ -7,7 +7,22 @@
 // TODO try printing the buffer with SDL2
 
 
+unsigned char getPixel(unsigned char *buffer, int row, int col) {
+    return buffer[row * 128 + col];
+}
+
+void setPixel(unsigned char *buffer, int row, int col, unsigned char value) {
+    buffer[row * 128 + col] = value;
+}
+
+// Usage
+unsigned char pixel_value = getPixel(buffer, 3, 4); // Access
+setPixel(buffer, 3, 4, new_value); // Modify
+
+
+
 int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format) {
+
     // TODO implement transformation
     return 1;
 }

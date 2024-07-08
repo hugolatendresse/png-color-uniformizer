@@ -1,6 +1,14 @@
-//
-// Created by hugo on 5/20/2024.
-//
+/* file: manual.cpp
+ *
+ * @brief
+ * In this file, a png is decompressed and read "manually", rather than with libpng. This is done to understand
+ * better the exact structure of PNG.
+ *
+ * @references
+ * http://www.libpng.org/pub/png/spec/1.2/PNG-Contents.html
+ * http://www.libpng.org/pub/png/libpng-1.4.0-manual.pdf
+ *
+ */
 
 #include <cstdio>
 #include <algorithm>
