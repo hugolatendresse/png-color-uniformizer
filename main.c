@@ -11,14 +11,93 @@
 #include "uniformizer.h"
 
 
+void helper() {
+    const char *m =
+            "Usage: ./pcu file_in file_out -r <r> -g <g> -b <b> -a <a> [-k <k>]\n"
+            "       ./pcu file_in file_out -k <k>\n"
+            "\n"
+            "   file_in Path to input file (the PNG image to change)\n"
+            "   file_out Path to output file (where to save)\n"
+            "   -k Number of groups for k-means algorithm\n"
+            "   -r RGBA value for Red\n"
+            "   -g RGBA value for Green\n"
+            "   -b RGBA value for Blue\n"
+            "   -a RGBA value for Alpha\n"
+            "   -h Display this message. Other arguments are ignored\n"
+            "\n"
+            "If nothing is supplied, all pixels will be changed to the most common color\n" //TODO
+            "Example:\n"
+            "./pcu icon.png icon_new.png\n"
+            "\n"
+            "If only RGBA value are supplied, all pixels will be changed to that color\n" //TODO
+            "Example:\n"
+            "./pcu icon.png icon_new.png -r 255 -g 100 -b 0 -a 255\n"
+            "\n"
+            "If only a value for k is supplied, k-means algorithms will be used to restrict the "
+            "colors \n" //TODO
+            "Example:\n"
+            "./pcu icon.png icon_new.png -k 3 0\n"
+            "\n"
+            "If both a value for k and RGBA value are supplied, the RGBA color will be used as "
+            "well as k-1 colors coming from k-means algorithm\n" //TODO
+            "Example:\n"
+            "./pcu icon.png icon_new.png -k 4 -r 255 -g 100 -b 0 -a 255\n";
+    printf("%s\n", m);
+}
+
 int main(int argc, const char **argv) {
-    if (argc != 3) {
-        fprintf(stderr, "expects two arguments: input file path and output file path\n");
+    if (argc < 3) {
+        fprintf(stderr, "Expects at least two arguments: input file path and output file path\n");
         exit(EXIT_FAILURE);
     }
 
     const char *file_in = argv[1];
     const char *file_out = argv[2];
+
+    int k, r, g, b, a;
+    bool k_set = false;
+    bool r_set = false;
+    bool g_set = false;
+    bool b_set = false;
+    bool a_set = false;
+
+    // Read all arguments and update variables declared above accordingly
+    int opt;
+    while ((opt = getopt(argc, argv, "hk:r:g:b:a:")) != -1) {
+        switch (opt) {
+            case 'h':
+                helper();
+                exit(EXIT_SUCCESS);
+                break;
+            case 'k':
+                k_set = true;
+                k = atol(optarg);
+                break;
+            case 'r':
+                r_set = true;
+                r = atol(optarg);
+                break;
+            case 'g':
+                g_set = true;
+                g = atol(optarg);
+                break;
+            case 'b':
+                b_set = true;
+                b = atol(optarg);
+                break;
+            case 'a':
+                a_set = true;
+                a = atol(optarg);
+                break;
+            default:
+                printf("%s\n", "Error while passing arguments");
+                helper();
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    // TODO return error if some of RGBA are set but not all
+
     png_image image;
 
     // Only the image structure version number needs to be set
@@ -56,6 +135,7 @@ int main(int argc, const char **argv) {
     }
 
     // Modify image
+    // TODO implement options k r g b a as written in helper
     res = transform(idat_data, image.height, image.width,  row_stride, image.format);
     if (!res) {
         fprintf(stderr, "Error while transforming image\n");
