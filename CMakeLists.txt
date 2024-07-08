@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_C_STANDARD 99)
 
 # Targets
-add_executable(main main.c pixel.c transform.c display_image.c)
+add_executable(main main.c transform.c display_image.c)
 add_executable(manual manual.cpp display_image.c)
 add_executable(pixel pixel.c display_image.c)
 
