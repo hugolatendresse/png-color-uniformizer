@@ -1,31 +1,14 @@
+/* file: main.c
+ *
+ * @brief
+ * Reads, modifies, and writes a PNG
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include "png.h"
 #include "uniformizer.h"
-
-// TODO try printing the buffer with SDL2
-
-
-unsigned char getPixel(unsigned char *buffer, int row, int col) {
-    return buffer[row * 128 + col];
-}
-
-void setPixel(unsigned char *buffer, int row, int col, unsigned char value) {
-    buffer[row * 128 + col] = value;
-}
-
-// Usage
-unsigned char pixel_value = getPixel(buffer, 3, 4); // Access
-setPixel(buffer, 3, 4, new_value); // Modify
-
-
-
-int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format) {
-
-    // TODO implement transformation
-    return 1;
-}
 
 
 int main(int argc, const char **argv) {
@@ -42,8 +25,7 @@ int main(int argc, const char **argv) {
     memset(&image, 0, sizeof image);
     image.version = PNG_IMAGE_VERSION;
     image.format = PNG_FORMAT_RGBA;
-    // TODO allow other formats
-    //  For a colormap format, a colormap will need to be supplied.
+    // TODO allow other formats. For a colormap format, a colormap will need to be supplied.
 
     // Read header
     int res = png_image_begin_read_from_file(&image, file_in);
