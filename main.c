@@ -13,16 +13,17 @@
 
 void helper() {
     const char *m =
-            "Usage: ./pcu file_in file_out -r <r> -g <g> -b <b> -a <a> [-k <k>]\n"
-            "       ./pcu file_in file_out -k <k>\n"
+            "Usage: ./pcu file_in file_out -r <r> -g <g> -b <b> -a <a> [-k <k>] [--kmeans]\n"
+            "       ./pcu file_in file_out -k <k> [--kmodes]\n"
             "\n"
             "   file_in Path to input file (the PNG image to change)\n"
             "   file_out Path to output file (where to save)\n"
-            "   -k Number of groups for k-means algorithm\n"
+            "   -k Number of groups for k-modes algorithm\n"
             "   -r RGBA value for Red\n"
             "   -g RGBA value for Green\n"
             "   -b RGBA value for Blue\n"
             "   -a RGBA value for Alpha\n"
+            "   --kmeans will use k-means instead of k-modes"
             "   -h Display this message. Other arguments are ignored\n"
             "\n"
             "If nothing is supplied, all pixels will be changed to the most common color\n" //TODO
@@ -33,13 +34,13 @@ void helper() {
             "Example:\n"
             "./pcu icon.png icon_new.png -r 255 -g 100 -b 0 -a 255\n"
             "\n"
-            "If only a value for k is supplied, k-means algorithms will be used to restrict the "
+            "If only a value for k is supplied, k-modes algorithms will be used to restrict the "
             "colors \n" //TODO
             "Example:\n"
             "./pcu icon.png icon_new.png -k 3 0\n"
             "\n"
             "If both a value for k and RGBA value are supplied, the RGBA color will be used as "
-            "well as k-1 colors coming from k-means algorithm\n" //TODO
+            "well as k-1 colors coming from k-modes algorithm\n" //TODO
             "Example:\n"
             "./pcu icon.png icon_new.png -k 4 -r 255 -g 100 -b 0 -a 255\n";
     printf("%s\n", m);
@@ -60,11 +61,24 @@ int main(int argc, const char **argv) {
     bool g_set = false;
     bool b_set = false;
     bool a_set = false;
+    bool kmeans = false;
+
+    // Define the long options
+    static struct option long_options[] = {
+            {"kmeans", no_argument, 0, 0},
+            {0, 0, 0, 0} // Terminate the array with zeros
+    };
 
     // Read all arguments and update variables declared above accordingly
     int opt;
-    while ((opt = getopt(argc, argv, "hk:r:g:b:a:")) != -1) {
+    int option_index = 0;
+    while ((opt = getopt_long(argc, argv, "hk:r:g:b:a:", long_options, &options_index)) != -1) {
         switch (opt) {
+            case 0:
+                if (strcmp(long_options[option_index].name, "kmeans") == 0) {
+                    kmeans = true;
+                }
+                break;
             case 'h':
                 helper();
                 exit(EXIT_SUCCESS);
