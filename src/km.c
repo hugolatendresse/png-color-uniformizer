@@ -114,8 +114,6 @@ int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int 
 	}
 }
 
-
-
 double *centroid(double **observations, int observations_size, int vector_size) {
 	double *vector = (double *) calloc(vector_size, sizeof(double));
 	
