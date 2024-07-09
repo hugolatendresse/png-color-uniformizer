@@ -126,7 +126,8 @@ int main(int argc, const char **argv) {
     const char *file_in = argv[1];
     const char *file_out = argv[2];
 
-    int k, r, g, b, a;
+    unsigned int k;
+    unsigned char r, g, b, a;
     bool k_set = false;
     bool r_set = false;
     bool g_set = false;
@@ -232,6 +233,7 @@ int main(int argc, const char **argv) {
     }
 
     // Print the image
+    // TODO create an option -d to display
     display_image(image.height, image.width, idat_data);
 
     // Write image back

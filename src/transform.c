@@ -86,15 +86,22 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
         pixels[i].pos = i;
     }
 
-    printf("Observations:\n");
-    print_rgba_pixels(pixels, pixel_cnt);  // TODO probably need to pass size of struct rather than vector_size
-    printf("\n\n");
+    // TODO create an option to print the pixels
+    // printf("Observations:\n");
+    // print_rgba_pixels(pixels, pixel_cnt);
+    // printf("\n\n");
 
     int member_cnt_for_rgba_when_alpha_is_included = 4; // TODO make depend on getopt
     double **centroids = create_centroids_rgba(pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included);
     int* cluster_map = km_rgba(centroids, pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included); // TODO probably need to pass size of struct rather than vector_size
 
-    free(pixels);
+    // Apply cluster map
+    for (unsigned int i = 0; i < pixel_cnt; i++) {
+        input_pixels[i].r = centroids[cluster_map[i]][0];
+        input_pixels[i].g = centroids[cluster_map[i]][1];
+        input_pixels[i].b = centroids[cluster_map[i]][2];
+        input_pixels[i].a = centroids[cluster_map[i]][3];
+    }
 
 
     // printf("Clusters:\n");
@@ -102,6 +109,7 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
     // printf("\n");
 
     // TODO free everything
+    // free(pixels);
     // for (int i=0 ; i<k ; ++i)
     //     free(clusters[i]);
     // free(clusters);
