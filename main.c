@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include "png.h"
 #include "include/uniformizer.h"
-#include "include/km.h"
 #include <getopt.h>
 
 void helper() {
@@ -48,75 +47,6 @@ void helper() {
     printf("%s\n", m);
 }
 
-
-
-
-
-
-void test_kmeans() {
-    char *filename = "Test_9.txt";
-    int observations_size = 9;
-    int vector_size = 2;
-    int k = 4;
-    FILE *fp;
-
-    /* TODO plan
-     * have struct of pixels that includes row and col
-     * create a list of observation, one struct per pixel
-     * create clusters (will need to modify kmeans code to use only n first fields of the struct)
-     * recreate picture
-    */
-
-
-
-    // char *filename = argv[1];
-    /* Make sure you update observations_size, vector_size and k
-     * accordingly to your needs
-     */
-    // int observations_size = atoi(argv[2]);
-    // int vector_size = atoi(argv[3]);
-    // int k = atoi(argv[4]);
-    double **observations;
-    double ***clusters;
-
-    observations = (double **) malloc(sizeof(double *) * observations_size);
-    for (int i = 0; i < observations_size; i++)
-        observations[i] = (double *) malloc(sizeof(double) * vector_size);
-
-    if ((fp = fopen(filename, "r+")) == NULL) {
-        printf("No such file or directory\n");
-        for (int i=0 ; i<observations_size ; ++i)
-            free(observations[i]);
-        free(observations);
-        exit(1);
-    }
-
-    for (int i = 0; i < observations_size; i++) {
-        for (int j = 0; j < vector_size; j++)
-            fscanf(fp, "%lf", &observations[i][j]);
-    }
-
-    printf("Observations:\n");
-    print_observations(observations, observations_size, vector_size);
-    printf("\n\n");
-
-    clusters = km(observations, k, observations_size, vector_size);
-    printf("Clusters:\n");
-    print_clusters(clusters, k, observations_size, vector_size);
-    printf("\n");
-
-    for (int i=0 ; i<k ; ++i)
-        free(clusters[i]);
-    free(clusters);
-
-    for (int i=0 ; i<observations_size ; ++i)
-        free(observations[i]);
-    free(observations);
-    fclose(fp);
-
-}
-
-
 int main(int argc, const char **argv) {
     if (argc < 3) {
         fprintf(stderr, "Expects at least two arguments: input file path and output file path\n");
@@ -149,8 +79,6 @@ int main(int argc, const char **argv) {
             case 0:
                 if (strcmp(long_options[option_index].name, "kmeans") == 0) {
                     kmeans = true;
-                    test_kmeans(); // TODO remove
-                    exit(EXIT_SUCCESS); // TODO remove this line
                 }
                 break;
             case 'h':

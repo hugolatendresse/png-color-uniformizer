@@ -9,7 +9,6 @@
 
 #include "png.h"
 #include "../include/uniformizer.h"
-#include "../include/km.h"
 
 
 static int stride;
@@ -37,53 +36,17 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
         return 0;
     }
 
-    RGBA_Pixel pixel = {255, 0, 0, 255};
 
-    // set_pixel(buffer, 0, 0, &pixel); // Modify
-    // set_pixel(buffer, 0, 1, &pixel); // Modify
-    // set_pixel(buffer, 0, 2, &pixel); // Modify
-    // set_pixel(buffer, 0, 3, &pixel); // Modify
-    // set_pixel(buffer, 0, 4, &pixel); // Modify
-    // set_pixel(buffer, 1, 0, &pixel); // Modify
-    // set_pixel(buffer, 1, 1, &pixel); // Modify
-    // set_pixel(buffer, 1, 2, &pixel); // Modify
-    // set_pixel(buffer, 1, 3, &pixel); // Modify
-    // set_pixel(buffer, 1, 4, &pixel); // Modify
-
-
-    char *filename = "Test_9.txt";
     unsigned int pixel_cnt = width * height;
-    FILE *fp;
-
-    /* TODO plan
-     * have struct of pixels that includes row and col
-     * create a list of observation, one struct per pixel
-     * create clusters (will need to modify kmeans code to use only n first fields of the struct)
-     * recreate picture
-     * For k-means, what is MUCH cleaner is that we pass a distance metric (a function that calculates centroids and distances)
-    */
-
-    // char *filename = argv[1];
-    /* Make sure you update observations_size, vector_size and k
-     * accordingly to your needs
-     */
-    // int observations_size = atoi(argv[2]);
-    // int vector_size = atoi(argv[3]);
-    // int k = atoi(argv[4]);
-
     RGBA_Pixel *input_pixels = (RGBA_Pixel *)buffer;
 
-    // Can't use buffer as is since buffer is made of unsigned char and we need double for k-means
-    // TODO may not need need pos at all since we can just use the index in buffer and cluster_map
-    RGBA_Pixel_Pos_Double *pixels = calloc(pixel_cnt, sizeof(RGBA_Pixel_Pos_Double));
+    double **pixels = malloc(pixel_cnt * sizeof(double *));
     for (unsigned int i = 0; i < pixel_cnt; i++) {
-        // Assign pixel values. Uses implicit casting from unsigned char to double
-        pixels[i].r = input_pixels[i].r;
-        pixels[i].g = input_pixels[i].g;
-        pixels[i].b = input_pixels[i].b;
-        pixels[i].a = input_pixels[i].a;
-        // Assign position value
-        pixels[i].pos = i;
+        pixels[i] = malloc(4 * sizeof(double));
+        pixels[i][0] = input_pixels[i].r;
+        pixels[i][1] = input_pixels[i].g;
+        pixels[i][2] = input_pixels[i].b;
+        pixels[i][3] = input_pixels[i].a;
     }
 
     // TODO create an option to print the pixels
@@ -92,8 +55,8 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
     // printf("\n\n");
 
     int member_cnt_for_rgba_when_alpha_is_included = 4; // TODO make depend on getopt
-    double **centroids = create_centroids_rgba(pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included);
-    int* cluster_map = km_rgba(centroids, pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included); // TODO probably need to pass size of struct rather than vector_size
+    double **centroids = create_centroids(pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included);
+    int* cluster_map = km(centroids, pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included); // TODO probably need to pass size of struct rather than vector_size
 
     // Apply cluster map
     for (unsigned int i = 0; i < pixel_cnt; i++) {
