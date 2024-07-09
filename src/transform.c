@@ -5,11 +5,11 @@
  *
  */
 
-#include <km.h>
 #include <stdlib.h>
 
 #include "png.h"
 #include "../include/uniformizer.h"
+#include "../include/km.h"
 
 
 static int stride;
@@ -73,6 +73,8 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
 
     RGBA_Pixel *input_pixels = (RGBA_Pixel *)buffer;
 
+    // Can't use buffer as is since buffer is made of unsigned char and we need double for k-means
+    // TODO may not need need pos at all since we can just use the index in buffer and cluster_map
     RGBA_Pixel_Pos_Double *pixels = calloc(pixel_cnt, sizeof(RGBA_Pixel_Pos_Double));
     for (unsigned int i = 0; i < pixel_cnt; i++) {
         // Assign pixel values. Uses implicit casting from unsigned char to double
@@ -88,16 +90,21 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
     print_rgba_pixels(pixels, pixel_cnt);  // TODO probably need to pass size of struct rather than vector_size
     printf("\n\n");
 
-    double ***clusters = km(pixels, k, pixel_cnt, RGBA_POS_DOUBLE_LEN); // TODO probably need to pass size of struct rather than vector_size
-    printf("Clusters:\n");
-    print_clusters(clusters, k, pixel_cnt, RGBA_POS_DOUBLE_LEN); // TODO probably need to pass size of struct rather than vector_size
-    printf("\n");
-
-    for (int i=0 ; i<k ; ++i)
-        free(clusters[i]);
-    free(clusters);
+    int member_cnt_for_rgba_when_alpha_is_included = 4; // TODO make depend on getopt
+    int* cluster_map = km_rgba(pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included); // TODO probably need to pass size of struct rather than vector_size
 
     free(pixels);
+
+
+    // printf("Clusters:\n");
+    // print_clusters(clusters, k, pixel_cnt, RGBA_POS_DOUBLE_LEN); // TODO probably need to pass size of struct rather than vector_size
+    // printf("\n");
+
+    // TODO free everything
+    // for (int i=0 ; i<k ; ++i)
+    //     free(clusters[i]);
+    // free(clusters);
+
 }
 
 static void set_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
