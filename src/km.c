@@ -128,11 +128,12 @@ double ***km(double **observations, int k, int observations_size, int vector_siz
 	}
 }
 
+// TODO implement the part that creates an array of clusters (after cluster_map is final) in a separate function
+
 // member_cnt is needed to know how many fields to use in the struct
-int *km_rgba(RGBA_Pixel_Pos_Double *pixels, int k, unsigned int pixel_cnt, int member_cnt) {
+int *km_rgba(double **centroids, RGBA_Pixel_Pos_Double *pixels, int k, unsigned int pixel_cnt, int member_cnt) {
 	clusters_sizes = (int *) calloc(k, sizeof(int));
 	int *clusters_map = (int *) calloc(pixel_cnt, sizeof(int));
-	double **centroids = initialize_rgba(pixels, k, pixel_cnt, member_cnt);
 
 	if (pixel_cnt < k) {
 		fprintf(stderr, "Could not compute clusters.");
@@ -150,25 +151,13 @@ int *km_rgba(RGBA_Pixel_Pos_Double *pixels, int k, unsigned int pixel_cnt, int m
 		int *new_clusters_map = partition_rgba(pixels, centroids, k, pixel_cnt, member_cnt);
 
 		if (compare_clusters(clusters_map, new_clusters_map, pixel_cnt)) {
-			// double ***clusters = map_clusters(clusters_map, pixels, k, pixel_cnt, member_cnt);
-
-			for (int i = 0; i < k; ++i)
-				free(centroids[i]);
-			free(centroids);
 			free(clusters_map);
-			// free(new_clusters_map);
-
-			// return clusters;
 			return new_clusters_map;
 		}
 
-		for (int i = 0; i < k; ++i) {
-			free(centroids[i]);
-		}
-		free(centroids);
 		free(clusters_map);
 		clusters_map = new_clusters_map;
-		centroids = re_centroids_rgba(clusters_map, pixels, k, pixel_cnt, member_cnt);
+		re_centroids_rgba(centroids, clusters_map, pixels, k, pixel_cnt, member_cnt);
 	}
 }
 
@@ -282,7 +271,7 @@ double **initialize(double **observations, int k, int observations_size, int vec
 	return centroids;
 }
 
-double **initialize_rgba(RGBA_Pixel_Pos_Double *pixels, int k, unsigned int pixel_cnt, int member_cnt) {
+double **create_centroids_rgba(RGBA_Pixel_Pos_Double *pixels, int k, unsigned int pixel_cnt, int member_cnt) {
 	double **centroids = (double **) malloc(sizeof(double *) * k);
 
 	srand(time(NULL));
@@ -379,9 +368,7 @@ double **re_centroids(int *clusters_map, double **observations, int k, int obser
 	return centroids;
 }
 
-
-double **re_centroids_rgba(int *clusters_map, RGBA_Pixel_Pos_Double *pixels, int k, unsigned int pixel_cnt, int member_count) {
-	double **centroids = (double **) malloc(sizeof(double *) * k);
+void re_centroids_rgba(double **centroids, int *clusters_map, RGBA_Pixel_Pos_Double *pixels, int k, unsigned int pixel_cnt, int member_count) {
 	double **temp_arr = (double **) malloc(sizeof(double *) * pixel_cnt);
 
 	for (int cluster_idx = 0, count = 0; cluster_idx < k; ++cluster_idx) {
@@ -399,8 +386,6 @@ double **re_centroids_rgba(int *clusters_map, RGBA_Pixel_Pos_Double *pixels, int
 	}
 
 	free(temp_arr);
-
-	return centroids;
 }
 
 double ***map_clusters(int *clusters_map, double **observations, int k, int observations_size, int vector_size) {

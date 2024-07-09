@@ -91,7 +91,8 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
     printf("\n\n");
 
     int member_cnt_for_rgba_when_alpha_is_included = 4; // TODO make depend on getopt
-    int* cluster_map = km_rgba(pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included); // TODO probably need to pass size of struct rather than vector_size
+    double **centroids = create_centroids_rgba(pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included);
+    int* cluster_map = km_rgba(centroids, pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included); // TODO probably need to pass size of struct rather than vector_size
 
     free(pixels);
 
