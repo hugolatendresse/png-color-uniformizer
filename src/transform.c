@@ -75,16 +75,26 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
 
     // Can't use buffer as is since buffer is made of unsigned char and we need double for k-means
     // TODO may not need need pos at all since we can just use the index in buffer and cluster_map
-    RGBA_Pixel_Pos_Double *pixels = calloc(pixel_cnt, sizeof(RGBA_Pixel_Pos_Double));
+    // RGBA_Pixel_Pos_Double *pixels = calloc(pixel_cnt, sizeof(RGBA_Pixel_Pos_Double));
+    // for (unsigned int i = 0; i < pixel_cnt; i++) {
+    //     // Assign pixel values. Uses implicit casting from unsigned char to double
+    //     pixels[i].r = input_pixels[i].r;
+    //     pixels[i].g = input_pixels[i].g;
+    //     pixels[i].b = input_pixels[i].b;
+    //     pixels[i].a = input_pixels[i].a;
+    //     // Assign position value
+    //     pixels[i].pos = i;
+    // }
+
+    double **pixels = malloc(pixel_cnt * sizeof(double *));
     for (unsigned int i = 0; i < pixel_cnt; i++) {
-        // Assign pixel values. Uses implicit casting from unsigned char to double
-        pixels[i].r = input_pixels[i].r;
-        pixels[i].g = input_pixels[i].g;
-        pixels[i].b = input_pixels[i].b;
-        pixels[i].a = input_pixels[i].a;
-        // Assign position value
-        pixels[i].pos = i;
+        pixels[i] = malloc(4 * sizeof(double));
+        pixels[i][0] = input_pixels[i].r;
+        pixels[i][1] = input_pixels[i].g;
+        pixels[i][2] = input_pixels[i].b;
+        pixels[i][3] = input_pixels[i].a;
     }
+
 
     // TODO create an option to print the pixels
     // printf("Observations:\n");
