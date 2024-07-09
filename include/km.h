@@ -1,9 +1,14 @@
 #ifndef KM_H
 #define KM_H
 
+#include "uniformizer.h"
+#define UNIFORMIZER_H
 
 void print_vector(double *vector, int vector_size);
 void print_observations(double **observations, int observations_size, int vector_size);
+void print_rgba_pixel(RGBA_Pixel_Pos_Double *pixel);
+void print_rgba_pixels(RGBA_Pixel_Pos_Double *pixels, unsigned int pixel_cnt);
+
 void print_clusters(double ***clusters, int k, int observations_size, int vector_size);
 int compare_clusters(const int *cluster_map1, const int *cluster_map2, int clusters_size);
 

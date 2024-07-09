@@ -5,10 +5,12 @@
  *
  */
 
+#include <km.h>
+#include <stdlib.h>
+
 #include "png.h"
 #include "../include/uniformizer.h"
 
-#define RGBA_LEN 4
 
 static int stride;
 
@@ -23,14 +25,8 @@ static void get_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel
     pixel->a = buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, a)];
 }
 
-static void set_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
-    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, r)] = pixel->r;
-    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, g)] = pixel->g;
-    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, b)] = pixel->b;
-    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, a)] = pixel->a;
-}
-
-int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format) {
+int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,
+              unsigned int k) {
 
     // TODO implement options k r g b a as written in helper of main.c
 
@@ -43,17 +39,70 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
 
     RGBA_Pixel pixel = {255, 0, 0, 255};
 
-    set_pixel(buffer, 0, 0, &pixel); // Modify
-    set_pixel(buffer, 0, 1, &pixel); // Modify
-    set_pixel(buffer, 0, 2, &pixel); // Modify
-    set_pixel(buffer, 0, 3, &pixel); // Modify
-    set_pixel(buffer, 0, 4, &pixel); // Modify
-    set_pixel(buffer, 1, 0, &pixel); // Modify
-    set_pixel(buffer, 1, 1, &pixel); // Modify
-    set_pixel(buffer, 1, 2, &pixel); // Modify
-    set_pixel(buffer, 1, 3, &pixel); // Modify
-    set_pixel(buffer, 1, 4, &pixel); // Modify
+    // set_pixel(buffer, 0, 0, &pixel); // Modify
+    // set_pixel(buffer, 0, 1, &pixel); // Modify
+    // set_pixel(buffer, 0, 2, &pixel); // Modify
+    // set_pixel(buffer, 0, 3, &pixel); // Modify
+    // set_pixel(buffer, 0, 4, &pixel); // Modify
+    // set_pixel(buffer, 1, 0, &pixel); // Modify
+    // set_pixel(buffer, 1, 1, &pixel); // Modify
+    // set_pixel(buffer, 1, 2, &pixel); // Modify
+    // set_pixel(buffer, 1, 3, &pixel); // Modify
+    // set_pixel(buffer, 1, 4, &pixel); // Modify
 
-    return 1;
+
+    char *filename = "Test_9.txt";
+    unsigned int pixel_cnt = width * height;
+    FILE *fp;
+
+    /* TODO plan
+     * have struct of pixels that includes row and col
+     * create a list of observation, one struct per pixel
+     * create clusters (will need to modify kmeans code to use only n first fields of the struct)
+     * recreate picture
+     * For k-means, what is MUCH cleaner is that we pass a distance metric (a function that calculates centroids and distances)
+    */
+
+    // char *filename = argv[1];
+    /* Make sure you update observations_size, vector_size and k
+     * accordingly to your needs
+     */
+    // int observations_size = atoi(argv[2]);
+    // int vector_size = atoi(argv[3]);
+    // int k = atoi(argv[4]);
+
+    RGBA_Pixel *input_pixels = (RGBA_Pixel *)buffer;
+
+    RGBA_Pixel_Pos_Double *pixels = calloc(pixel_cnt, sizeof(RGBA_Pixel_Pos_Double));
+    for (unsigned int i = 0; i < pixel_cnt; i++) {
+        // Assign pixel values. Uses implicit casting from unsigned char to double
+        pixels[i].r = input_pixels[i].r;
+        pixels[i].g = input_pixels[i].g;
+        pixels[i].b = input_pixels[i].b;
+        pixels[i].a = input_pixels[i].a;
+        // Assign position value
+        pixels[i].pos = i;
+    }
+
+    printf("Observations:\n");
+    print_rgba_pixels(pixels, pixel_cnt);  // TODO probably need to pass size of struct rather than vector_size
+    printf("\n\n");
+
+    double ***clusters = km(pixels, k, pixel_cnt, RGBA_POS_DOUBLE_LEN); // TODO probably need to pass size of struct rather than vector_size
+    printf("Clusters:\n");
+    print_clusters(clusters, k, pixel_cnt, RGBA_POS_DOUBLE_LEN); // TODO probably need to pass size of struct rather than vector_size
+    printf("\n");
+
+    for (int i=0 ; i<k ; ++i)
+        free(clusters[i]);
+    free(clusters);
+
+    free(pixels);
 }
 
+static void set_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
+    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, r)] = pixel->r;
+    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, g)] = pixel->g;
+    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, b)] = pixel->b;
+    buffer[row * stride + col * RGBA_LEN + offsetof(RGBA_Pixel, a)] = pixel->a;
+}

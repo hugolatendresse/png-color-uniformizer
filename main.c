@@ -48,12 +48,27 @@ void helper() {
     printf("%s\n", m);
 }
 
+
+
+
+
+
 void test_kmeans() {
     char *filename = "Test_9.txt";
     int observations_size = 9;
     int vector_size = 2;
-    int k = 3;
+    int k = 4;
     FILE *fp;
+
+    /* TODO plan
+     * have struct of pixels that includes row and col
+     * create a list of observation, one struct per pixel
+     * create clusters (will need to modify kmeans code to use only n first fields of the struct)
+     * recreate picture
+    */
+
+
+
     // char *filename = argv[1];
     /* Make sure you update observations_size, vector_size and k
      * accordingly to your needs
@@ -99,7 +114,6 @@ void test_kmeans() {
     free(observations);
     fclose(fp);
 
-    return 0;
 }
 
 
@@ -129,7 +143,7 @@ int main(int argc, const char **argv) {
     // Read all arguments and update variables declared above accordingly
     int opt;
     int option_index = 0;
-    while ((opt = getopt_long(argc, argv, "hk:r:g:b:a:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, (char * const*)argv, "hk:r:g:b:a:", long_options, &option_index)) != -1) {
         switch (opt) {
             case 0:
                 if (strcmp(long_options[option_index].name, "kmeans") == 0) {
@@ -209,7 +223,8 @@ int main(int argc, const char **argv) {
 
     // Modify image
     // TODO implement options k r g b a as written in helper
-    res = transform(idat_data, image.height, image.width,  row_stride, image.format);
+    res = transform(idat_data, image.height, image.width,  row_stride, image.format,
+        k);
     if (!res) {
         fprintf(stderr, "Error while transforming image\n");
         free(idat_data);
