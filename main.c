@@ -17,8 +17,8 @@ bool kmodes = true;
 
 void helper() {
     const char *m =
-            "Usage: ./pcu file_in file_out -r <r> -g <g> -b <b> -a <a> [-c <c>] [--kmeans]\n"
-            "       ./pcu file_in file_out [-c <c>] [--kmodes]\n"
+            "Usage: ./pcu file_in.png file_out.png [-c <c>] [--kmeans]\n"
+            "       ./pcu file_in.png file_out.png -r <r> -g <g> -b <b> -a <a> [-c <c>] [--kmeans]\n"
             "\n"
             "   file_in Path to input file (the PNG image to change)\n"
             "   file_out Path to output file (where to save)\n"
@@ -27,7 +27,7 @@ void helper() {
             "   -g RGBA value for Green\n"
             "   -b RGBA value for Blue\n"
             "   -a RGBA value for Alpha\n"
-            "   -d To display image\n"
+            "   -d To display image once its transformed\n"
             "   --kmeans will use k-means instead of k-modes"
             "   -h Display this message. Other arguments are ignored\n"
             "\n"
@@ -39,15 +39,15 @@ void helper() {
             "Example:\n"
             "./pcu icon.png icon_new.png -r 255 -g 100 -b 0 -a 255\n"
             "\n"
-            "If only a value for k is supplied, k-modes algorithms will be used to restrict the "
+            "If only a value for c is supplied, k-modes algorithms will be used to restrict the "
             "colors \n" //TODO
             "Example:\n"
             "./pcu icon.png icon_new.png -k 3 0\n"
             "\n"
-            "If both a value for k and RGBA value are supplied, the RGBA color will be used as "
-            "well as k-1 colors coming from k-modes algorithm\n" //TODO
+            "If both a value for c and RGBA value are supplied, the RGBA color will be used as "
+            "well as c-1 colors coming from k-modes algorithm\n" //TODO
             "Example:\n"
-            "./pcu icon.png icon_new.png -k 4 -r 255 -g 100 -b 0 -a 255\n";
+            "./pcu icon.png icon_new.png -c 4 -r 255 -g 100 -b 0 -a 255\n";
     printf("%s\n", m);
 }
 
@@ -60,7 +60,7 @@ int main(int argc, const char **argv) {
     const char *file_in = argv[1];
     const char *file_out = argv[2];
 
-    unsigned int k = 3; // Use two groups by default
+    unsigned int k = 2; // Use two groups by default
     unsigned char r, g, b, a;
     bool k_set = false;
     bool r_set = false;
