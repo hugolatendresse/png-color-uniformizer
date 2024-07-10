@@ -10,8 +10,8 @@ add_executable(dbg-pcu main.c src/transform.c src/display_image.c src/km.c)
 target_compile_definitions(dbg-pcu PRIVATE DEBUG)
 
 # Other targets
-add_executable(patch patch.c src/transform.c src/display_image.c src/km.c)
-add_executable(manual manual.cpp src/display_image.c)
+add_executable(patch src/patch.c src/transform.c src/display_image.c src/km.c)
+add_executable(manual include/manual.cpp src/display_image.c)
 add_executable(pixel src/pixel.c src/display_image.c)
 
 # Libraries

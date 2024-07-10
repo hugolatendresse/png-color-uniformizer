@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "png.h"
-#include "include/pcu.h"
+#include "../include/pcu.h"
 #include <getopt.h>
 #include <stdatomic.h>
 #include <time.h>
