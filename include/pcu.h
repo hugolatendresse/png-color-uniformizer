@@ -21,9 +21,16 @@ extern "C" {
         unsigned char r;
         unsigned char g;
         unsigned char b;
+    } RGB_Pixel;
+    #define RGB_PIXEL_LEN (sizeof(RGB_Pixel)/sizeof(unsigned char))
+
+    typedef struct {
+        unsigned char r;
+        unsigned char g;
+        unsigned char b;
         unsigned char a;
-    } RGBAPixel;
-    #define RGBA_PIXEL_LEN 4
+    } RGBA_Pixel;
+    #define RGBA_PIXEL_LEN (sizeof(RGBA_Pixel)/sizeof(unsigned char))
 
     typedef struct {
         double r;

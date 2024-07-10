@@ -51,7 +51,7 @@ component(png_const_bytep row, png_uint_32 x, unsigned int c,
  */
 static void
 print_and_write_pixel(png_structp png_ptr, png_infop info_ptr, png_const_bytep row,
-                      png_uint_32 x, RGBAPixel *out, bool printflag) {
+                      png_uint_32 x, RGBA_Pixel *out, bool printflag) {
     unsigned int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
 
     switch (png_get_color_type(png_ptr, info_ptr)) {
@@ -119,7 +119,7 @@ print_and_write_pixel(png_structp png_ptr, png_infop info_ptr, png_const_bytep r
     }
 }
 
-int get_one_pixel(long pixelrow, long pixelcol, char *filename, RGBAPixel *out, bool printflag) {
+int get_one_pixel(long pixelrow, long pixelcol, char *filename, RGBA_Pixel *out, bool printflag) {
     /* This program uses the default, <setjmp.h> based, libpng error handling
      * mechanism, therefore any local variable that exists before the call to
      * setjmp and is changed after the call to setjmp returns successfully must
@@ -332,7 +332,7 @@ int main(int argc, char *argv[]) {
 
         for (long row = 0; row < height; row++) {
             for (long col = 0; col < width; col++) {
-                RGBAPixel *out = malloc(sizeof(RGBAPixel));
+                RGBA_Pixel *out = malloc(sizeof(RGBA_Pixel));
                 bool printflag = false;
                 // TODO: reading file every time right now. Decompose get_one_pixel and read file once
                 get_one_pixel(row, col, filename, out, printflag);
@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
         char *filename = argv[1];
         long pixelrow = atol(argv[2]);
         long pixelcol = atol(argv[3]);
-        RGBAPixel *out = malloc(sizeof(RGBAPixel));
+        RGBA_Pixel *out = malloc(sizeof(RGBA_Pixel));
         bool printflag = true;
         get_one_pixel(pixelrow, pixelcol, filename, out, printflag);
     } else {

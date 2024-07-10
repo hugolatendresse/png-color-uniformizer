@@ -17,11 +17,11 @@ static int get_RGBA_stride(int width, int additional_stride) {
     return width * 4 + additional_stride;
 }
 
-static void get_pixel(unsigned char *buffer, int row, int col, RGBAPixel *pixel) {
-    pixel->r = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, r)];
-    pixel->g = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, g)];
-    pixel->b = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, b)];
-    pixel->a = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, a)];
+static void get_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
+    pixel->r = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, r)];
+    pixel->g = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, g)];
+    pixel->b = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, b)];
+    pixel->a = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, a)];
 }
 
 int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,
@@ -32,13 +32,13 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
     if (format == PNG_FORMAT_RGBA) {
         member_cnt = RGBA_PIXEL_LEN;
     } else if (format == PNG_FORMAT_RGB) {
-        member_cnt = 3;
+        member_cnt = RGB_PIXEL_LEN;
     } else {
         fprintf(stderr, "Only RGBA format is supported right now. Try a different PNG file\n");
         return 0;
     }
     unsigned int pixel_cnt = width * height;
-    RGBAPixel *input_pixels = (RGBAPixel *)buffer;
+    RGBA_Pixel *input_pixels = (RGBA_Pixel *)buffer;
 
     double **pixels = malloc(pixel_cnt * sizeof(double *));
     for (unsigned int i = 0; i < pixel_cnt; i++) {
@@ -75,9 +75,9 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
 
 }
 
-static void set_pixel(unsigned char *buffer, int row, int col, RGBAPixel *pixel) {
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, r)] = pixel->r;
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, g)] = pixel->g;
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, b)] = pixel->b;
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBAPixel, a)] = pixel->a;
+static void set_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, r)] = pixel->r;
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, g)] = pixel->g;
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, b)] = pixel->b;
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, a)] = pixel->a;
 }
