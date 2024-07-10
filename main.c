@@ -51,7 +51,7 @@ void helper() {
             "If only a value for c is supplied, k-modes algorithms will be used to restrict the "
             "colors \n" //TODO
             "Example:\n"
-            "./pcu icon.png icon_new.png -k 3 0\n"
+            "./pcu icon.png icon_new.png -c 3 0\n"
             "\n"
             "If both a value for c and RGBA value are supplied, the RGBA color will be used as "
             "well as c-1 colors coming from k-modes algorithm\n" //TODO
@@ -89,7 +89,7 @@ int main(int argc, const char **argv) {
     // Read all arguments and update variables declared above accordingly
     int opt;
     int option_index = 0;
-    while ((opt = getopt_long(argc, (char * const*) argv, "hdk:r:g:b:a:s:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, (char * const*) argv, "hdc:r:g:b:a:s:", long_options, &option_index)) != -1) {
         switch (opt) {
             case 0:
                 if (strcmp(long_options[option_index].name, "kmeans") == 0) {
@@ -167,12 +167,11 @@ int main(int argc, const char **argv) {
         }
     }
 
-    png_image image;
 
     // Only the image structure version number needs to be set
+    png_image image;
     memset(&image, 0, sizeof image);
     image.version = PNG_IMAGE_VERSION;
-    image.format = PNG_FORMAT_RGBA;
     // TODO allow other formats. For a colormap format, a colormap will need to be supplied.
 
     // Read header
@@ -198,6 +197,7 @@ int main(int argc, const char **argv) {
 
     // Create buffer for image data
     png_bytep idat_data;
+    image.format = PNG_FORMAT_RGBA;
     idat_data = malloc(PNG_IMAGE_SIZE(image)); // Pointer to uncompressed IDAT data
     if (idat_data == NULL) {
         fprintf(stderr, "Couldn't allocate %lu bytes for buffer\n",

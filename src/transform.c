@@ -31,6 +31,8 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
     int member_cnt;
     if (format == PNG_FORMAT_RGBA) {
         member_cnt = RGBA_PIXEL_LEN;
+    } else if (format == PNG_FORMAT_RGB) {
+        member_cnt = 3;
     } else {
         fprintf(stderr, "Only RGBA format is supported right now. Try a different PNG file\n");
         return 0;
@@ -55,7 +57,8 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
         input_pixels[i].r = centroids[cluster_map[i]][0];
         input_pixels[i].g = centroids[cluster_map[i]][1];
         input_pixels[i].b = centroids[cluster_map[i]][2];
-        if (change_alpha) {
+        // Only change alpha if change_alpha is true or if the pixel is intended to be white
+        if (change_alpha || (input_pixels[i].r == 0 && input_pixels[i].g == 0 && input_pixels[i].b == 0)) {
             input_pixels[i].a = centroids[cluster_map[i]][3];
         }
     }

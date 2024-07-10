@@ -94,7 +94,6 @@ int compare_clusters(const int *clusters_map1, const int *clusters_map2, int clu
 // member_cnt is needed to know how many fields to use in a given observation
 
 int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
-	print_centroids(centroids, k, member_cnt);
 	clusters_sizes = (int *) calloc(k, sizeof(int));
 	int *clusters_map = (int *) calloc(pixel_cnt, sizeof(int));
 
@@ -110,7 +109,9 @@ int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int 
 		exit(1);
 	}
 
-	while (1) {
+	// Iterate algorithm until centroids converge, or until maximum loops is reached (to avoid infinite loop)
+	for(int i = 0; i < 1000; i++) {
+		printf("#########  Running iteration %d  #########\n", i);
 		int *new_clusters_map = partition(pixels, centroids, k, pixel_cnt, member_cnt);
 
 		if (compare_clusters(clusters_map, new_clusters_map, pixel_cnt)) {
@@ -132,6 +133,9 @@ double *centroid_mean(double **pixels, unsigned int pixel_cnt, int member_cnt) {
 	double *vector = (double *) calloc(member_cnt, sizeof(double));
 	
 	for (int i = 0; i < pixel_cnt; i++) {
+		if (i % 100000 == 0) {
+			dbg_printf("Step %d in centroid_mode\n", i);
+		}
 		double *temp = vsum(vector, pixels[i], member_cnt);
 		free(vector);
 		vector = temp;
@@ -144,23 +148,22 @@ double *centroid_mean(double **pixels, unsigned int pixel_cnt, int member_cnt) {
 }
 
 // Used for centroid_mode
-
 typedef struct {
 	double *pixel;
 	unsigned int count;
 } PixelFrequency;
 
 // Similar as centroid_mean, but that calculates the mode instead of mean
-
 // This function will be used to calculate the mode of the pixels in a cluster
-
 // It returns a vector that corresponds to the pixel that occurs the most often in the cluster
-
 double *centroid_mode(double **pixels, unsigned int pixel_cnt, int member_cnt) {
 	PixelFrequency *frequencies = calloc(pixel_cnt, sizeof(PixelFrequency));
 	unsigned int unique_pixel_cnt = 0;
 
 	for (unsigned int i = 0; i < pixel_cnt; i++) {
+		if (i % 100000 == 0) {
+			dbg_printf("Step %d in centroid_mode\n", i);
+		}
 		int found = 0;
 		for (unsigned int j = 0; j < unique_pixel_cnt; j++) {
 			if (memcmp(pixels[i], frequencies[j].pixel, member_cnt * sizeof(double)) == 0) {
@@ -343,7 +346,6 @@ int *partition(double **pixels, double **centroids, int k, unsigned int pixel_cn
 void update_centroids(double **centroids, int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
 	double **temp_arr = (double **) malloc(sizeof(double *) * pixel_cnt);
 
-
 	int cluster_idx = 0;
 	if (forced_pixel != NULL) {
 		// First centroid is equal to forced_pixel, if applicable
@@ -353,7 +355,7 @@ void update_centroids(double **centroids, int *clusters_map, double **pixels, in
 		dbg_printf("Using forced_pixel for centroid %d\n", cluster_idx);
 	}
 	for (int count = 0; cluster_idx < k; ++cluster_idx) {
-		for (int i = 0; i < pixel_cnt; i++) {
+		for (unsigned int i = 0; i < pixel_cnt; i++) {
 			int curr = clusters_map[i];
 
 			if (curr == cluster_idx) {
@@ -367,7 +369,9 @@ void update_centroids(double **centroids, int *clusters_map, double **pixels, in
 		} else {
 			centroids[cluster_idx] = centroid_mean(temp_arr, count, member_cnt);
 		}
+#ifdef DEBUG
 		print_centroids(centroids, k, member_cnt);
+#endif
 		count = 0;
 	}
 
