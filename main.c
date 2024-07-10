@@ -17,12 +17,12 @@ bool kmodes = true;
 
 void helper() {
     const char *m =
-            "Usage: ./pcu file_in file_out -r <r> -g <g> -b <b> -a <a> [-k <k>] [--kmeans]\n"
-            "       ./pcu file_in file_out [-k <k>] [--kmodes]\n"
+            "Usage: ./pcu file_in file_out -r <r> -g <g> -b <b> -a <a> [-c <c>] [--kmeans]\n"
+            "       ./pcu file_in file_out [-c <c>] [--kmodes]\n"
             "\n"
             "   file_in Path to input file (the PNG image to change)\n"
             "   file_out Path to output file (where to save)\n"
-            "   -k Number of groups for k-modes algorithm. Default is 2\n"
+            "   -c Number of groups for k-modes algorithm. Default is 2\n"
             "   -r RGBA value for Red\n"
             "   -g RGBA value for Green\n"
             "   -b RGBA value for Blue\n"
@@ -92,7 +92,8 @@ int main(int argc, const char **argv) {
             case 'd':
                 display = true;
                 break;
-            case 'k':
+            case 'c':
+                // Using letter 'c' to mean "color", but really what we mean is the 'k' in k-means/k-modes
                 k_set = true;
                 k = atol(optarg);
                 break;

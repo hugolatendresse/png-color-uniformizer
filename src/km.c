@@ -274,6 +274,18 @@ int rand_num(int range) {
 	return i;
 }
 
+// Function to check whether any two centroids are identical
+// Returns true if some centroids are the same, false otherwise
+bool some_centroids_are_the_same(double **centroids, int k, int member_cnt) {
+	for (int i = 0; i < k; i++) {
+		for (int j = i + 1; j < k; j++) {
+			if (memcmp(centroids[i], centroids[j], member_cnt * sizeof(double)) == 0)
+				return true;
+		}
+	}
+	return false; // No centroids are the same
+}
+
 double **create_centroids(double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
 	double **centroids = (double **) malloc(sizeof(double *) * k);
 
@@ -281,13 +293,16 @@ double **create_centroids(double **pixels, int k, unsigned int pixel_cnt, int me
 	int r = rand_num(pixel_cnt);
 
 	// Pick random pixels as centroids, without replacement
+	// Will iterate until it finds centroids that are all different
 	for (int cluster_idx = 0; cluster_idx < k; ++cluster_idx) {
-		centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
+		do {
+			r = rand_num(-1);
+			centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
+			for (int j = 0; j < member_cnt; j++) {
+				centroids[cluster_idx][j] = pixels[r][j];
+			}
+		} while (some_centroids_are_the_same(centroids, cluster_idx+1, member_cnt));
 		dbg_printf("Using pixel %d for centroid %d\n", r, cluster_idx);
-		for (int j = 0; j < member_cnt; j++) {
-			centroids[cluster_idx][j] = pixels[r][j];
-		}
-		r = rand_num(-1);
 	}
 
 #ifdef DEBUG
