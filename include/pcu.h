@@ -1,5 +1,5 @@
-#ifndef UNIFORMIZER_H
-#define UNIFORMIZER_H
+#ifndef PCU_H
+#define PCU_H
 
 #include <png.h>
 

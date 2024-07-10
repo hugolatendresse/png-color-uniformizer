@@ -17,7 +17,7 @@
 #include <cstring>
 #include <zlib.h>
 #include <vector>
-#include "include/uniformizer.h"
+#include "include/pcu.h"
 #include <SDL.h>
 
 #define SIGNATURE_LENGTH 8

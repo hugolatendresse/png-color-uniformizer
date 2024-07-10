@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 #include "png.h"
-#include "../include/uniformizer.h"
+#include "../include/pcu.h"
 
 
 static int stride;

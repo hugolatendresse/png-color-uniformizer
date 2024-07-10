@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "png.h"
-#include "include/uniformizer.h"
+#include "include/pcu.h"
 #include <getopt.h>
 
 void helper() {

@@ -4,7 +4,7 @@
 #include <float.h>
 #include <string.h>
 #include <time.h>
-#include "../include/uniformizer.h"
+#include "../include/pcu.h"
 
 
 int *clusters_sizes;

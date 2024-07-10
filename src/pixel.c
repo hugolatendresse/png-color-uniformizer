@@ -9,7 +9,7 @@
 #include <setjmp.h>
 #include <stdbool.h>
 #include "png.h"
-#include "../include/uniformizer.h"
+#include "../include/pcu.h"
 
 /* Return component 'c' of pixel 'x' from the given row. */
 static unsigned int
