@@ -42,10 +42,10 @@ You will need libpng and SDL2 installed on your system. Assuming Ubuntu or other
   cd build
   cmake ..
   make pcu
-  ./pcu <input_file> <output_file> [options]
+  ./pcu <file_in> <file_out> [options]
   ```
 
-Example:
+Example:<br>
     ```
     ./pcu ../assets/gift.png gift_2colors.png -d -c 2 -r 255 -b 150 -g 155 -a 200 --kmeans
     ```
@@ -54,13 +54,9 @@ Example:
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Usage: 
-<br>
-`./pcu file_in.png file_out.png [-c <c>] [--kmeans]`
-<br>
-`./pcu file_in.png file_out.png -r <r> -g <g> -b <b> -a <a> [-c <c>] [--kmeans]`
+`./pcu <file_in> <file_out> [options]`
 
-Arguments description:
+Optional arguments description:
 <br>file_in Path to input file (the PNG image to change)
 <br>file_out Path to output file (where to save)
 <br>-h Display this message. Other arguments are ignored
