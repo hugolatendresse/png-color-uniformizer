@@ -31,6 +31,7 @@ extern "C" {
     // Globals
     extern int *clusters_sizes;
     extern bool kmodes;
+    extern unsigned int seed;
 
     int display_image(int height, int width, unsigned char *data);
     int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,

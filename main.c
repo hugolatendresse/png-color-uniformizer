@@ -11,9 +11,11 @@
 #include "png.h"
 #include "include/pcu.h"
 #include <getopt.h>
+#include <time.h>
 
 // Will use k-modes by default and switch to k-means if --kmeans is passed
 bool kmodes = true;
+unsigned int seed;
 
 void helper() {
     const char *m =
@@ -28,6 +30,7 @@ void helper() {
             "   -b RGBA value for Blue\n"
             "   -a RGBA value for Alpha\n"
             "   -d To display image once its transformed\n"
+            "   -s set the seed. Picked at random if not provided\n"
             "   --kmeans will use k-means instead of k-modes"
             "   -h Display this message. Other arguments are ignored\n"
             "\n"
@@ -68,6 +71,7 @@ int main(int argc, const char **argv) {
     bool b_set = false;
     bool a_set = false;
     bool display = false;
+    seed = time(NULL);
 
     // Define the long options
     static struct option long_options[] = {
@@ -78,7 +82,7 @@ int main(int argc, const char **argv) {
     // Read all arguments and update variables declared above accordingly
     int opt;
     int option_index = 0;
-    while ((opt = getopt_long(argc, (char * const*)argv, "hdk:r:g:b:a:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, (char * const*)argv, "hdk:r:g:b:a:s:", long_options, &option_index)) != -1) {
         switch (opt) {
             case 0:
                 if (strcmp(long_options[option_index].name, "kmeans") == 0) {
@@ -113,6 +117,9 @@ int main(int argc, const char **argv) {
                 a_set = true;
                 a = atol(optarg);
                 break;
+            case 's':
+                seed = strtoul(optarg, NULL, 10);
+                break;
             default:
                 printf("%s\n", "Error while passing arguments");
                 helper();
@@ -133,7 +140,7 @@ int main(int argc, const char **argv) {
     // Read header
     int res = png_image_begin_read_from_file(&image, file_in);
     if (!res) {
-        fprintf(stderr, "pngtopng: %s: %s\n", argv[1], image.message);
+        fprintf(stderr, "%s: %s\n", argv[1], image.message);
         exit(EXIT_FAILURE);
     } else {
         printf("Reading %s\n", file_in);

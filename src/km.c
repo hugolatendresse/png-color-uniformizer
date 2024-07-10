@@ -4,7 +4,6 @@
 #include <float.h>
 #include <stdbool.h>
 #include <string.h>
-#include <time.h>
 #include "../include/pcu.h"
 
 #ifdef DEBUG
@@ -289,7 +288,8 @@ bool some_centroids_are_the_same(double **centroids, int k, int member_cnt) {
 double **create_centroids(double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
 	double **centroids = (double **) malloc(sizeof(double *) * k);
 
-	srand(time(NULL));
+	srand(seed);  // Fixed seed for debugging
+
 	int r = rand_num(pixel_cnt);
 
 	// Pick random pixels as centroids, without replacement
