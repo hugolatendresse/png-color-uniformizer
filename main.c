@@ -27,6 +27,7 @@ void helper() {
             "\n"
             "   file_in Path to input file (the PNG image to change)\n"
             "   file_out Path to output file (where to save)\n"
+            "   -h Display this message. Other arguments are ignored\n"
             "   -c Number of groups for k-modes algorithm. Default is 2\n"
             "   -r RGBA value for Red\n"
             "   -g RGBA value for Green\n"
@@ -36,34 +37,26 @@ void helper() {
             "   -s set the seed. Picked at random if not provided\n"
             "   --kmeans will use k-means instead of k-modes"
             "   --alpha will treat alpha like other color components and change it. The default behavior is to keep alpha the same for all pixels.\n"
-            "   -h Display this message. Other arguments are ignored\n"
             "\n"
-            "If nothing is supplied, all pixels will be changed to the most common color\n" //TODO
+            "If nothing is supplied, k-modes will be used with two groups\n" //TODO
             "Example:\n"
             "./pcu icon.png icon_new.png\n"
             "\n"
-            "If only RGBA value are supplied, all pixels will be changed to that color\n" //TODO
             "Example, k-means with 2 colors:\n"
             "./pcu icon.png icon_new.png -c 2 --kmeans\n"
-            "Example, k-modes (the default), specifying of the three colors to use:\n"
-            "./pcu icon.png icon_new.png -c 3 -r 255 -g 100 -b 0 -a 255\n"
             "\n"
-            "If only a value for c is supplied, k-modes algorithms will be used to restrict the "
-            "colors \n" //TODO
-            "Example:\n"
-            "./pcu icon.png icon_new.png -c 3 0\n"
-            "\n"
-            "If both a value for c and RGBA value are supplied, the RGBA color will be used as "
-            "well as c-1 colors coming from k-modes algorithm\n" //TODO
-            "Example:\n"
-            "./pcu icon.png icon_new.png -c 4 -r 255 -g 100 -b 0 -a 255\n";
+            "If a set of RGBA values are supplied, one of the clusters will be forced to be that color\n"
+            "Example below will use k-modes (the default) with three colors, one of which will be (255,100,0,255)\n"
+            "The other two colors will be picked by the k-modes algorithm.\n"
+            "./pcu icon.png icon_new.png -c 3 -r 255 -g 100 -b 0 -a 255\n";
     printf("%s\n", m);
+    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, const char **argv) {
     if (argc < 3) {
-        fprintf(stderr, "Expects at least two arguments: input file path and output file path\n");
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "Expects at least two arguments: input file path and output file path\n\n");
+        helper();
     }
 
     const char *file_in = argv[1];
@@ -100,8 +93,6 @@ int main(int argc, const char **argv) {
                 break;
             case 'h':
                 helper();
-                exit(EXIT_SUCCESS);
-                break;
             case 'd':
                 display = true;
                 break;
@@ -146,9 +137,8 @@ int main(int argc, const char **argv) {
                 seed = strtoul(optarg, NULL, 10);
                 break;
             default:
-                printf("%s\n", "Error while passing arguments");
+                printf("%s\n", "Error while passing arguments\n");
                 helper();
-                exit(EXIT_FAILURE);
         }
     }
 
