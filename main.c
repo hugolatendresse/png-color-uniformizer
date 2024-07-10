@@ -177,7 +177,7 @@ int main(int argc, const char **argv) {
     // Read header
     int res = png_image_begin_read_from_file(&image, file_in);
     if (!res) {
-        fprintf(stderr, "%s: %s\n", argv[1], image.message);
+        fprintf(stderr, "%s: %s\n", file_in, image.message);
         exit(EXIT_FAILURE);
     } else {
         printf("Reading %s\n", file_in);
@@ -212,7 +212,7 @@ int main(int argc, const char **argv) {
     void *colormap = NULL;
     res = png_image_finish_read(&image, background, idat_data, row_stride, colormap);
     if (!res) {
-        fprintf(stderr, "Couldn't read %s: %s\n", argv[1], image.message);
+        fprintf(stderr, "Couldn't read %s: %s\n", file_in, image.message);
         free(idat_data);
         exit(EXIT_FAILURE);
     }

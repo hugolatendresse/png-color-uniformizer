@@ -49,6 +49,7 @@ extern "C" {
     int display_image(int height, int width, unsigned char *data);
     int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,
         unsigned int k);
+    int patch(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format);
 
     void print_vector(double *vector, int vector_size);
     void print_observations(double **observations, int observations_size, int vector_size);

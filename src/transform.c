@@ -17,6 +17,13 @@ static int get_RGBA_stride(int width, int additional_stride) {
     return width * 4 + additional_stride;
 }
 
+static void set_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, r)] = pixel->r;
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, g)] = pixel->g;
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, b)] = pixel->b;
+    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, a)] = pixel->a;
+}
+
 static void get_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
     pixel->r = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, r)];
     pixel->g = buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, g)];
@@ -26,7 +33,11 @@ static void get_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel
 
 int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,
               unsigned int k) {
-    stride = get_RGBA_stride(width, row_stride);
+    if (row_stride != 0) {
+        fprintf(stderr, "Unsupported format - row_stride is not 0. Try another png.");
+        exit(EXIT_FAILURE);
+    }
+    stride = get_RGBA_stride(width, row_stride); // TODO need to implement the use of additional stride
 
     int member_cnt;
     if (format == PNG_FORMAT_RGBA) {
@@ -54,12 +65,14 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
 
     // Apply cluster map
     for (unsigned int i = 0; i < pixel_cnt; i++) {
-        input_pixels[i].r = centroids[cluster_map[i]][0];
-        input_pixels[i].g = centroids[cluster_map[i]][1];
-        input_pixels[i].b = centroids[cluster_map[i]][2];
-        // Only change alpha if change_alpha is true or if the pixel is intended to be white
-        if (change_alpha || (input_pixels[i].r == 0 && input_pixels[i].g == 0 && input_pixels[i].b == 0)) {
-            input_pixels[i].a = centroids[cluster_map[i]][3];
+        // Only change pixels that are not transparent
+        if (input_pixels[i].a != 0) {  // || input_pixels[i].r != 0 || input_pixels[i].g != 0 || input_pixels[i].b != 0
+            input_pixels[i].r = centroids[cluster_map[i]][0];
+            input_pixels[i].g = centroids[cluster_map[i]][1];
+            input_pixels[i].b = centroids[cluster_map[i]][2];
+            if (change_alpha) {
+                input_pixels[i].a = centroids[cluster_map[i]][3];
+            }
         }
     }
 
@@ -75,9 +88,34 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
 
 }
 
-static void set_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel) {
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, r)] = pixel->r;
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, g)] = pixel->g;
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, b)] = pixel->b;
-    buffer[row * stride + col * RGBA_PIXEL_LEN + offsetof(RGBA_Pixel, a)] = pixel->a;
+int patch(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format) {
+    stride = get_RGBA_stride(width, row_stride);
+
+    int member_cnt;
+    if (format == PNG_FORMAT_RGBA) {
+        member_cnt = RGBA_PIXEL_LEN;
+    } else if (format == PNG_FORMAT_RGB) {
+        member_cnt = RGB_PIXEL_LEN;
+    } else {
+        fprintf(stderr, "Only RGBA format is supported right now. Try a different PNG file\n");
+        return 0;
+    }
+    unsigned int pixel_cnt = width * height;
+
+    RGBA_Pixel black = {0,0,0,255};
+    RGBA_Pixel red = {255,0,0,255};
+
+    unsigned int row_start = 2200;
+    unsigned int row_end = 2500;
+    unsigned int col_start = 3760;
+    unsigned int col_end = 3900;
+
+    for (unsigned int row = row_start; row < row_end; row++) {
+        for (unsigned int col = col_start; col < col_end; col++) {
+            set_pixel(buffer, row, col, &black);
+        }
+    }
 }
+
+
+
