@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.27)
+cmake_minimum_required(VERSION 3.0)
 project(png_color_uniformizer)
 
 set(CMAKE_C_STANDARD 99)
