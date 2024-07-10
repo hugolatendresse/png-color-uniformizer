@@ -8,12 +8,12 @@
 
 int *clusters_sizes;
 
-void print_rgba_pixel(RGBA_Pixel_Double *pixel) {
+void print_rgba_pixel(RGBAPixelDouble *pixel) {
 	char *format = "(%.2f, %.2f, %.2f, %.2f)";
 	printf(format, pixel->r, pixel->g, pixel->b, pixel->a);
 }
 
-void print_rgba_pixels(RGBA_Pixel_Double *pixels, unsigned int pixel_cnt) {
+void print_rgba_pixels(RGBAPixelDouble *pixels, unsigned int pixel_cnt) {
 	printf("[");
 
 	for (int i = 0; i < pixel_cnt; i++) {
@@ -291,7 +291,7 @@ double **create_centroids(double **pixels, int k, unsigned int pixel_cnt, int me
 	if (forced_pixel != NULL) {
 		// First centroid is equal to forced_pixel, if applicable
 		centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
-		*((RGBA_Pixel_Double *)centroids[cluster_idx]) = *forced_pixel;
+		*((RGBAPixelDouble *)centroids[cluster_idx]) = *forced_pixel;
 		cluster_idx++;
 		dbg_printf("Using forced_pixel for centroid %d\n", cluster_idx);
 	}
@@ -348,7 +348,7 @@ void update_centroids(double **centroids, int *clusters_map, double **pixels, in
 	if (forced_pixel != NULL) {
 		// First centroid is equal to forced_pixel, if applicable
 		centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
-		*((RGBA_Pixel_Double *)centroids[cluster_idx]) = *forced_pixel;
+		*((RGBAPixelDouble *)centroids[cluster_idx]) = *forced_pixel;
 		cluster_idx++;
 		dbg_printf("Using forced_pixel for centroid %d\n", cluster_idx);
 	}

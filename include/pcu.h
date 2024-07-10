@@ -22,25 +22,22 @@ extern "C" {
         unsigned char g;
         unsigned char b;
         unsigned char a;
-    } RGBA_Pixel;
+    } RGBAPixel;
+    #define RGBA_PIXEL_LEN 4
 
     typedef struct {
         double r;
         double g;
         double b;
         double a;
-    } RGBA_Pixel_Double;
-
-    // Width of RGBA pixel and RGBA pixel with position
-    #define RGBA_LEN 4
-    #define RGBA_POS_LEN 5
-    #define RGBA_POS_DOUBLE_LEN 5
+    } RGBAPixelDouble;
 
     // Globals
     extern int *clusters_sizes;
     extern bool kmodes;
+    extern bool change_alpha;
     extern unsigned int seed;
-    extern RGBA_Pixel_Double *forced_pixel;
+    extern RGBAPixelDouble *forced_pixel;
 
     int display_image(int height, int width, unsigned char *data);
     int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,
@@ -48,8 +45,8 @@ extern "C" {
 
     void print_vector(double *vector, int vector_size);
     void print_observations(double **observations, int observations_size, int vector_size);
-    void print_rgba_pixel(RGBA_Pixel_Double *pixel);
-    void print_rgba_pixels(RGBA_Pixel_Double *pixels, unsigned int pixel_cnt);
+    void print_rgba_pixel(RGBAPixelDouble *pixel);
+    void print_rgba_pixels(RGBAPixelDouble *pixels, unsigned int pixel_cnt);
 
     void print_clusters(double ***clusters, int k, int observations_size, int vector_size);
     int compare_clusters(const int *cluster_map1, const int *cluster_map2, int clusters_size);

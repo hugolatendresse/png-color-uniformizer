@@ -16,8 +16,9 @@
 
 // Will use k-modes by default and switch to k-means if --kmeans is passed
 bool kmodes = true;
+bool change_alpha = false;
 unsigned int seed;
-RGBA_Pixel_Double *forced_pixel = NULL;
+RGBAPixelDouble *forced_pixel = NULL;
 
 void helper() {
     const char *m =
@@ -34,6 +35,7 @@ void helper() {
             "   -d To display image once its transformed\n"
             "   -s set the seed. Picked at random if not provided\n"
             "   --kmeans will use k-means instead of k-modes"
+            "   --alpha will treat alpha like other color components and change it. The default behavior is to keep alpha the same for all pixels.\n"
             "   -h Display this message. Other arguments are ignored\n"
             "\n"
             "If nothing is supplied, all pixels will be changed to the most common color\n" //TODO
@@ -80,6 +82,7 @@ int main(int argc, const char **argv) {
     // Define the long options
     static struct option long_options[] = {
         {"kmeans", no_argument, 0, 0},
+        {"alpha", no_argument, 0, 0},
         {0, 0, 0, 0} // Terminate the array with zeros
     };
 
@@ -91,6 +94,8 @@ int main(int argc, const char **argv) {
             case 0:
                 if (strcmp(long_options[option_index].name, "kmeans") == 0) {
                     kmodes = false;
+                } else if (strcmp(long_options[option_index].name, "alpha") == 0) {
+                    change_alpha = true;
                 }
                 break;
             case 'h':
@@ -153,7 +158,7 @@ int main(int argc, const char **argv) {
             fprintf(stderr, "If you supply an RGBA value, you must supply all four values\n");
             exit(EXIT_FAILURE);
         } else {
-            forced_pixel = malloc(sizeof(RGBA_Pixel_Double));
+            forced_pixel = malloc(sizeof(RGBAPixelDouble));
             forced_pixel->r = r;
             forced_pixel->g = g;
             forced_pixel->b = b;
@@ -180,9 +185,15 @@ int main(int argc, const char **argv) {
     }
 
     if (kmodes) {
-        printf("Using kmodes algorithm\n");
+        dbg_printf("Using kmodes algorithm\n");
     } else {
-        printf("Using kmeans algorithm\n");
+        dbg_printf("Using kmeans algorithm\n");
+    }
+
+    if (change_alpha) {
+        dbg_printf("Will change alpha, like other colors\n");
+    } else {
+        dbg_printf("Changing only RGB (not alpha)\n");
     }
 
     // Create buffer for image data
@@ -207,9 +218,7 @@ int main(int argc, const char **argv) {
     }
 
     // Modify image
-    // TODO implement options k r g b a as written in helper
-    res = transform(idat_data, image.height, image.width, row_stride, image.format,
-                    k);
+    res = transform(idat_data, image.height, image.width, row_stride, image.format, k);
     if (!res) {
         fprintf(stderr, "Error while transforming image\n");
         free(idat_data);
@@ -221,7 +230,7 @@ int main(int argc, const char **argv) {
         display_image(image.height, image.width, idat_data);
     }
 
-    // Write image back
+    // Write resulting image to file
     int convert_to_8bit = 0;
     res = png_image_write_to_file(&image, file_out, convert_to_8bit, idat_data, row_stride, colormap);
     if (!res) {
