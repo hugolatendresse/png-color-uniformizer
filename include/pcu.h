@@ -57,7 +57,7 @@ extern "C" {
     int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int member_cnt);
     double **create_centroids(double **pixels, int k, unsigned int pixel_cnt, int member_cnt);
     int *partition(double **pixels, double **centroids, int k, unsigned int pixel_cnt, int member_cnt);
-    void update_centroid(double **centroids, int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int member_cnt);
+    void update_centroids(double **centroids, int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int member_cnt);
     double ***map_clusters(int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int vector_size);
     double **map_cluster(const int *clusters_map, double **pixels, int c, unsigned int pixel_cnt, int vector_size);
 

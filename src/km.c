@@ -111,9 +111,7 @@ int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int 
 	}
 
 	while (1) {
-		print_centroids(centroids, k, member_cnt);
 		int *new_clusters_map = partition(pixels, centroids, k, pixel_cnt, member_cnt);
-		print_centroids(centroids, k, member_cnt);
 
 		if (compare_clusters(clusters_map, new_clusters_map, pixel_cnt)) {
 			free(clusters_map);
@@ -122,7 +120,11 @@ int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int 
 
 		free(clusters_map);
 		clusters_map = new_clusters_map;
-		update_centroid(centroids, clusters_map, pixels, k, pixel_cnt, member_cnt);
+		update_centroids(centroids, clusters_map, pixels, k, pixel_cnt, member_cnt);
+#ifdef DEBUG
+		print_centroids(centroids, k, member_cnt);
+#endif
+
 	}
 }
 
@@ -338,10 +340,19 @@ int *partition(double **pixels, double **centroids, int k, unsigned int pixel_cn
 	return clusters_map;
 }
 
-void update_centroid(double **centroids, int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
+void update_centroids(double **centroids, int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
 	double **temp_arr = (double **) malloc(sizeof(double *) * pixel_cnt);
 
-	for (int cluster_idx = 0, count = 0; cluster_idx < k; ++cluster_idx) {
+
+	int cluster_idx = 0;
+	if (forced_pixel != NULL) {
+		// First centroid is equal to forced_pixel, if applicable
+		centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
+		*((RGBA_Pixel_Double *)centroids[cluster_idx]) = *forced_pixel;
+		cluster_idx++;
+		dbg_printf("Using forced_pixel for centroid %d\n", cluster_idx);
+	}
+	for (int count = 0; cluster_idx < k; ++cluster_idx) {
 		for (int i = 0; i < pixel_cnt; i++) {
 			int curr = clusters_map[i];
 
