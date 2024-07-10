@@ -73,7 +73,7 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
 
     // TODO free everything
     // free(pixels);
-    // for (int i=0 ; i<k ; ++i)
+    // for (int i=0 ; i<k ; i++)
     //     free(clusters[i]);
     // free(clusters);
 

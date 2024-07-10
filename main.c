@@ -12,18 +12,22 @@
 #include "include/pcu.h"
 #include <getopt.h>
 
+// Will use k-modes by default and switch to k-means if --kmeans is passed
+bool kmodes = true;
+
 void helper() {
     const char *m =
             "Usage: ./pcu file_in file_out -r <r> -g <g> -b <b> -a <a> [-k <k>] [--kmeans]\n"
-            "       ./pcu file_in file_out -k <k> [--kmodes]\n"
+            "       ./pcu file_in file_out [-k <k>] [--kmodes]\n"
             "\n"
             "   file_in Path to input file (the PNG image to change)\n"
             "   file_out Path to output file (where to save)\n"
-            "   -k Number of groups for k-modes algorithm\n"
+            "   -k Number of groups for k-modes algorithm. Default is 2\n"
             "   -r RGBA value for Red\n"
             "   -g RGBA value for Green\n"
             "   -b RGBA value for Blue\n"
             "   -a RGBA value for Alpha\n"
+            "   -d To display image\n"
             "   --kmeans will use k-means instead of k-modes"
             "   -h Display this message. Other arguments are ignored\n"
             "\n"
@@ -56,14 +60,14 @@ int main(int argc, const char **argv) {
     const char *file_in = argv[1];
     const char *file_out = argv[2];
 
-    unsigned int k;
+    unsigned int k = 3; // Use two groups by default
     unsigned char r, g, b, a;
     bool k_set = false;
     bool r_set = false;
     bool g_set = false;
     bool b_set = false;
     bool a_set = false;
-    bool kmeans = false;
+    bool display = false;
 
     // Define the long options
     static struct option long_options[] = {
@@ -74,16 +78,19 @@ int main(int argc, const char **argv) {
     // Read all arguments and update variables declared above accordingly
     int opt;
     int option_index = 0;
-    while ((opt = getopt_long(argc, (char * const*)argv, "hk:r:g:b:a:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, (char * const*)argv, "hdk:r:g:b:a:", long_options, &option_index)) != -1) {
         switch (opt) {
             case 0:
                 if (strcmp(long_options[option_index].name, "kmeans") == 0) {
-                    kmeans = true;
+                    kmodes = false;
                 }
                 break;
             case 'h':
                 helper();
                 exit(EXIT_SUCCESS);
+                break;
+            case 'd':
+                display = true;
                 break;
             case 'k':
                 k_set = true;
@@ -127,6 +134,14 @@ int main(int argc, const char **argv) {
     if (!res) {
         fprintf(stderr, "pngtopng: %s: %s\n", argv[1], image.message);
         exit(EXIT_FAILURE);
+    } else {
+        printf("Reading %s\n", file_in);
+    }
+
+    if (kmodes) {
+        printf("Using kmodes algorithm\n");
+    } else {
+        printf("Using kmeans algorithm\n");
     }
 
     // Create buffer for image data
@@ -160,9 +175,10 @@ int main(int argc, const char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    // Print the image
-    // TODO create an option -d to display
-    display_image(image.height, image.width, idat_data);
+    // Show the image on screen
+    if (display) {
+        display_image(image.height, image.width, idat_data);
+    }
 
     // Write image back
     int convert_to_8bit = 0;
@@ -171,6 +187,8 @@ int main(int argc, const char **argv) {
         fprintf(stderr, "Couldn't write %s\n", image.message);
         free(idat_data);
         exit(EXIT_FAILURE);
+    } else {
+        printf("Saved %s\n", file_out);
     }
     free(idat_data);
     return 0;
