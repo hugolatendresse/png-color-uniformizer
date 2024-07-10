@@ -6,23 +6,14 @@
 #include <string.h>
 #include "../include/pcu.h"
 
-#ifdef DEBUG
-#define dbg_assert(expr) assert(expr)
-#define dbg_printf(...) ((void)printf(__VA_ARGS__))
-#else
-#define dbg_discard_expr_(...) ((void)((0) && printf(__VA_ARGS__)))
-#define dbg_assert(expr) dbg_discard_expr_("%d", !(expr))
-#define dbg_printf(...) dbg_discard_expr_(__VA_ARGS__)
-#endif
-
 int *clusters_sizes;
 
-void print_rgba_pixel(RGBA_Pixel_Pos_Double *pixel) {
-	char *format = "(%.2f, %.2f, %.2f, %.2f, %u)";
-	printf(format, pixel->r, pixel->g, pixel->b, pixel->a, pixel->pos);
+void print_rgba_pixel(RGBA_Pixel_Double *pixel) {
+	char *format = "(%.2f, %.2f, %.2f, %.2f)";
+	printf(format, pixel->r, pixel->g, pixel->b, pixel->a);
 }
 
-void print_rgba_pixels(RGBA_Pixel_Pos_Double *pixels, unsigned int pixel_cnt) {
+void print_rgba_pixels(RGBA_Pixel_Double *pixels, unsigned int pixel_cnt) {
 	printf("[");
 
 	for (int i = 0; i < pixel_cnt; i++) {
@@ -290,19 +281,27 @@ double **create_centroids(double **pixels, int k, unsigned int pixel_cnt, int me
 
 	srand(seed);  // Fixed seed for debugging
 
-	int r = rand_num(pixel_cnt);
+	int pixel_idx = rand_num(pixel_cnt);
 
 	// Pick random pixels as centroids, without replacement
 	// Will iterate until it finds centroids that are all different
-	for (int cluster_idx = 0; cluster_idx < k; ++cluster_idx) {
+	int cluster_idx = 0;
+	if (forced_pixel != NULL) {
+		// First centroid is equal to forced_pixel, if applicable
+		centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
+		*((RGBA_Pixel_Double *)centroids[cluster_idx]) = *forced_pixel;
+		cluster_idx++;
+		dbg_printf("Using forced_pixel for centroid %d\n", cluster_idx);
+	}
+	for (; cluster_idx < k; ++cluster_idx) {
 		do {
-			r = rand_num(-1);
+			pixel_idx = rand_num(-1);
 			centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
 			for (int j = 0; j < member_cnt; j++) {
-				centroids[cluster_idx][j] = pixels[r][j];
+				centroids[cluster_idx][j] = pixels[pixel_idx][j];
 			}
 		} while (some_centroids_are_the_same(centroids, cluster_idx+1, member_cnt));
-		dbg_printf("Using pixel %d for centroid %d\n", r, cluster_idx);
+		dbg_printf("Using pixel %d for centroid %d\n", pixel_idx, cluster_idx);
 	}
 
 #ifdef DEBUG

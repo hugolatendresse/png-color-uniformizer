@@ -26,17 +26,11 @@ static void get_pixel(unsigned char *buffer, int row, int col, RGBA_Pixel *pixel
 
 int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,
               unsigned int k) {
-
-    // TODO implement options k r g b a as written in helper of main.c
-
     stride = get_RGBA_stride(width, row_stride);
-
     if (format != PNG_FORMAT_RGBA) {
-        fprintf(stderr, "Only RGBA format is supported right now.\n");
+        fprintf(stderr, "Only RGBA format is supported right now. Try a different PNG file\n");
         return 0;
     }
-
-
     unsigned int pixel_cnt = width * height;
     RGBA_Pixel *input_pixels = (RGBA_Pixel *)buffer;
 
@@ -48,11 +42,6 @@ int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_3
         pixels[i][2] = input_pixels[i].b;
         pixels[i][3] = input_pixels[i].a;
     }
-
-    // TODO create an option to print the pixels
-    // printf("Observations:\n");
-    // print_rgba_pixels(pixels, pixel_cnt);
-    // printf("\n\n");
 
     int member_cnt_for_rgba_when_alpha_is_included = 4; // TODO make depend on getopt
     double **centroids = create_centroids(pixels, k, pixel_cnt, member_cnt_for_rgba_when_alpha_is_included);

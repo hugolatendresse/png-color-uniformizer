@@ -11,11 +11,13 @@
 #include "png.h"
 #include "include/pcu.h"
 #include <getopt.h>
+#include <stdatomic.h>
 #include <time.h>
 
 // Will use k-modes by default and switch to k-means if --kmeans is passed
 bool kmodes = true;
 unsigned int seed;
+RGBA_Pixel_Double *forced_pixel = NULL;
 
 void helper() {
     const char *m =
@@ -39,8 +41,10 @@ void helper() {
             "./pcu icon.png icon_new.png\n"
             "\n"
             "If only RGBA value are supplied, all pixels will be changed to that color\n" //TODO
-            "Example:\n"
-            "./pcu icon.png icon_new.png -r 255 -g 100 -b 0 -a 255\n"
+            "Example, k-means with 2 colors:\n"
+            "./pcu icon.png icon_new.png -c 2 --kmeans\n"
+            "Example, k-modes (the default), specifying of the three colors to use:\n"
+            "./pcu icon.png icon_new.png -c 3 -r 255 -g 100 -b 0 -a 255\n"
             "\n"
             "If only a value for c is supplied, k-modes algorithms will be used to restrict the "
             "colors \n" //TODO
@@ -75,14 +79,14 @@ int main(int argc, const char **argv) {
 
     // Define the long options
     static struct option long_options[] = {
-            {"kmeans", no_argument, 0, 0},
-            {0, 0, 0, 0} // Terminate the array with zeros
+        {"kmeans", no_argument, 0, 0},
+        {0, 0, 0, 0} // Terminate the array with zeros
     };
 
     // Read all arguments and update variables declared above accordingly
     int opt;
     int option_index = 0;
-    while ((opt = getopt_long(argc, (char * const*)argv, "hdk:r:g:b:a:s:", long_options, &option_index)) != -1) {
+    while ((opt = getopt_long(argc, (char * const*) argv, "hdk:r:g:b:a:s:", long_options, &option_index)) != -1) {
         switch (opt) {
             case 0:
                 if (strcmp(long_options[option_index].name, "kmeans") == 0) {
@@ -103,19 +107,35 @@ int main(int argc, const char **argv) {
                 break;
             case 'r':
                 r_set = true;
-                r = atol(optarg);
+                r = strtoul(optarg, NULL, 10);
+                if (r > 255) {
+                    fprintf(stderr, "Red value must be between 0 and 255\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 'g':
                 g_set = true;
-                g = atol(optarg);
+                g = strtoul(optarg, NULL, 10);
+                if (g > 255) {
+                    fprintf(stderr, "Green value must be between 0 and 255\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 'b':
                 b_set = true;
-                b = atol(optarg);
+                b = strtoul(optarg, NULL, 10);;
+                if (b > 255) {
+                    fprintf(stderr, "Green value must be between 0 and 255\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 'a':
                 a_set = true;
-                a = atol(optarg);
+                a = strtoul(optarg, NULL, 10);
+                if (a > 255) {
+                    fprintf(stderr, "Alpha value must be between 0 and 255\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 's':
                 seed = strtoul(optarg, NULL, 10);
@@ -127,7 +147,20 @@ int main(int argc, const char **argv) {
         }
     }
 
-    // TODO return error if some of RGBA are set but not all
+    if (r_set || g_set || b_set || a_set) {
+        if (!r_set || !g_set || !b_set || !a_set) {
+            // Return error if some of RGBA are set but not all
+            fprintf(stderr, "If you supply an RGBA value, you must supply all four values\n");
+            exit(EXIT_FAILURE);
+        } else {
+            forced_pixel = malloc(sizeof(RGBA_Pixel_Double));
+            forced_pixel->r = r;
+            forced_pixel->g = g;
+            forced_pixel->b = b;
+            forced_pixel->a = a;
+            dbg_printf("Forcing first centroid to be %d %d %d %d\n", r, g, b, a);
+        }
+    }
 
     png_image image;
 
@@ -175,8 +208,8 @@ int main(int argc, const char **argv) {
 
     // Modify image
     // TODO implement options k r g b a as written in helper
-    res = transform(idat_data, image.height, image.width,  row_stride, image.format,
-        k);
+    res = transform(idat_data, image.height, image.width, row_stride, image.format,
+                    k);
     if (!res) {
         fprintf(stderr, "Error while transforming image\n");
         free(idat_data);
@@ -199,5 +232,6 @@ int main(int argc, const char **argv) {
         printf("Saved %s\n", file_out);
     }
     free(idat_data);
+    free(forced_pixel);
     return 0;
 }

@@ -8,20 +8,28 @@
 extern "C" {
 #endif
 
-    typedef struct rgba_pixel_ {
+    #ifdef DEBUG
+    #define dbg_assert(expr) assert(expr)
+    #define dbg_printf(...) ((void)printf(__VA_ARGS__))
+    #else
+    #define dbg_discard_expr_(...) ((void)((0) && printf(__VA_ARGS__)))
+    #define dbg_assert(expr) dbg_discard_expr_("%d", !(expr))
+    #define dbg_printf(...) dbg_discard_expr_(__VA_ARGS__)
+    #endif
+
+    typedef struct {
         unsigned char r;
         unsigned char g;
         unsigned char b;
         unsigned char a;
     } RGBA_Pixel;
 
-    typedef struct rgba_pixel_pos_double_ {
+    typedef struct {
         double r;
         double g;
         double b;
         double a;
-        unsigned int pos;
-    } RGBA_Pixel_Pos_Double;
+    } RGBA_Pixel_Double;
 
     // Width of RGBA pixel and RGBA pixel with position
     #define RGBA_LEN 4
@@ -32,6 +40,7 @@ extern "C" {
     extern int *clusters_sizes;
     extern bool kmodes;
     extern unsigned int seed;
+    extern RGBA_Pixel_Double *forced_pixel;
 
     int display_image(int height, int width, unsigned char *data);
     int transform(png_bytep buffer, png_uint_32 height, png_uint_32 width, png_int_32 row_stride, int format,
@@ -39,8 +48,8 @@ extern "C" {
 
     void print_vector(double *vector, int vector_size);
     void print_observations(double **observations, int observations_size, int vector_size);
-    void print_rgba_pixel(RGBA_Pixel_Pos_Double *pixel);
-    void print_rgba_pixels(RGBA_Pixel_Pos_Double *pixels, unsigned int pixel_cnt);
+    void print_rgba_pixel(RGBA_Pixel_Double *pixel);
+    void print_rgba_pixels(RGBA_Pixel_Double *pixels, unsigned int pixel_cnt);
 
     void print_clusters(double ***clusters, int k, int observations_size, int vector_size);
     int compare_clusters(const int *cluster_map1, const int *cluster_map2, int clusters_size);
