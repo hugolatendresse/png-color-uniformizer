@@ -81,88 +81,112 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## PNG Color Uniformizer
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+This tool helps turn this:
+<br>
+<img src="assets/gift.png" alt="Description" width="200" height="200">
 
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+Into this:
+<br>
+<img src="assets/gift_3colors.png" alt="Description" width="200" height="200">
 
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
-
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
-
-Use the `BLANK_README.md` to get started.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+Or this:
+<br>
+<img src="assets/gift_2colors.png" alt="Description" width="200" height="200">
 
 
-
-### Built With
-
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
-* [![Next][Next.js]][Next-url]
-* [![React][React.js]][React-url]
-* [![Vue][Vue.js]][Vue-url]
-* [![Angular][Angular.io]][Angular-url]
-* [![Svelte][Svelte.dev]][Svelte-url]
-* [![Laravel][Laravel.com]][Laravel-url]
-* [![Bootstrap][Bootstrap.com]][Bootstrap-url]
-* [![JQuery][JQuery.com]][JQuery-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+png-color-uniformizer is a tool designed to simplify the color palette of 
+PNG images. It uses k-modes and k-means clustering algorithms to reduce the 
+number of colors used in an image, making it more uniform. This is particularly 
+useful for creating graphics or reducing file sizes (the first image above is 674kB 
+while the third one is 13kB).
 
 
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
-* npm
+You will need libpng and SDL2 installed on your system. Assuming Ubuntu or other Debian-based system, you can install them with the following commands:
   ```sh
-  npm install npm@latest -g
+  sudo apt update
+  sudo apt install libpng-dev
+  sudo apt install libsdl2-dev
   ```
 
-### Installation
+### Running the tool 
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
+  ```sh
+  git clone https://github.com/hugolatendresse/png-color-uniformizer.git
+  cd png-color-uniformizer
+  mkdir build
+  cd build
+  cmake ..
+  make pcu
+  ./pcu <input_file> <output_file> [options]
+  ```
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+Example:
+    ```
+    ./pcu ../assets/gift.png gift_2colors.png -d -c 2 -r 255 -b 150 -g 155 -a 200 --kmeans
+    ```
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Usage: 
+<br>
+`./pcu file_in.png file_out.png [-c <c>] [--kmeans]`
+<br>
+`./pcu file_in.png file_out.png -r <r> -g <g> -b <b> -a <a> [-c <c>] [--kmeans]`
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+Arguments description:
+<br>file_in Path to input file (the PNG image to change)
+<br>file_out Path to output file (where to save)
+<br>-h Display this message. Other arguments are ignored
+<br>-c Number of groups for k-modes algorithm. Default is 2
+<br>-r RGBA value for Red
+<br>-g RGBA value for Green
+<br>-b RGBA value for Blue
+<br>-a RGBA value for Alpha
+<br>-d To display image once its transformed
+<br>-s set the seed. Picked at random if not provided
+<br>--kmeans will use k-means instead of k-modes. The default is k-modes.   
+--alpha will treat alpha like other color components and change it. The default behavior is to keep alpha the same for all pixels.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<br>If nothing is supplied, k-modes will be used with two groups. For example:<br>
+    ```
+    ./pcu icon.png icon_new.png
+    ```
+
+<br>Using k-means with 5 colors:<br>
+    ```
+    ./pcu icon.png icon_new.png -c 5 --kmeans
+    ```
+<br>
+<br>If a set of RGBA values are supplied, one of the clusters will be forced to be that color
+<br>Example below will use k-modes (the default) with three colors, one of which will be (255,100,0,255)
+<br>The other two colors will be picked by the k-modes algorithm.<br>
+    ```
+    ./pcu icon.png icon_new.png -c 3 -r 255 -g 100 -b 0 -a 255
+    ```
+
+To get the pink image above, you can run:<br>
+`./pcu assets/gift.png gift_2colors.png -d -c 2 -r 255 -b 150 -g 155 -a 200 --kmeans`
+
+To get the version with 3 colors (white gold black) above, you can run:<br>
+`./pcu assets/gift.png gift_3colors.png -c 3 -d`
 
 
+
+## Features
+Color Reduction: Reduce the number of colors in a PNG file using k-modes (default) or k-means clustering algorithms.
+<Br>Alpha Channel Handling: Option to include or exclude the alpha channel in the color reduction process.
+<Br>Custom Color Forcing: Force the image to include specific colors by providing RGBA values.
+<Br>Seed Customization: Ability to specify a seed for reproducibility of the color reduction process.
+<Br>Image Display: Option to display the transformed image directly after processing.
 
 <!-- ROADMAP -->
 ## Roadmap
