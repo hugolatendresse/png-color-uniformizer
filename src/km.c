@@ -2,10 +2,19 @@
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 #include "../include/pcu.h"
 
+#ifdef DEBUG
+#define dbg_assert(expr) assert(expr)
+#define dbg_printf(...) ((void)printf(__VA_ARGS__))
+#else
+#define dbg_discard_expr_(...) ((void)((0) && printf(__VA_ARGS__)))
+#define dbg_assert(expr) dbg_discard_expr_("%d", !(expr))
+#define dbg_printf(...) dbg_discard_expr_(__VA_ARGS__)
+#endif
 
 int *clusters_sizes;
 
@@ -17,7 +26,7 @@ void print_rgba_pixel(RGBA_Pixel_Pos_Double *pixel) {
 void print_rgba_pixels(RGBA_Pixel_Pos_Double *pixels, unsigned int pixel_cnt) {
 	printf("[");
 
-	for (int i = 0; i < pixel_cnt; ++i) {
+	for (int i = 0; i < pixel_cnt; i++) {
 		if (i > 0)
 			printf(", ");
 
@@ -30,7 +39,7 @@ void print_rgba_pixels(RGBA_Pixel_Pos_Double *pixels, unsigned int pixel_cnt) {
 void print_vector(double *vector, int vector_size) {
 	printf("(");
 
-	for (int i = 0; i < vector_size; ++i) {
+	for (int i = 0; i < vector_size; i++) {
 		if (i > 0)
 			printf(", ");
 
@@ -43,7 +52,7 @@ void print_vector(double *vector, int vector_size) {
 void print_observations(double **observations, int observations_size, int vector_size) {
 	printf("[");
 	
-	for (int i = 0; i < observations_size; ++i) {
+	for (int i = 0; i < observations_size; i++) {
 		if (i > 0)
 			printf(", ");
 		
@@ -68,6 +77,14 @@ void print_clusters(double ***clusters, int k, int observations_size, int vector
 	printf("}");
 }
 
+void print_centroids(double **centroids, int k, int member_cnt) {
+	for (int i = 0; i < k; i++) {
+		printf("Centroid %d: ", i);
+		print_vector(centroids[i], member_cnt);
+		printf("\n");
+	}
+}
+
 int compare_clusters(const int *clusters_map1, const int *clusters_map2, int clusters_size) {
 	int i = 0;
 	
@@ -75,7 +92,7 @@ int compare_clusters(const int *clusters_map1, const int *clusters_map2, int clu
 		if (clusters_map1[i] != clusters_map2[i])
 			return 0;
 		
-		++i;
+		i++;
 	}
 	
 	return 1;
@@ -83,15 +100,18 @@ int compare_clusters(const int *clusters_map1, const int *clusters_map2, int clu
 
 // TODO implement the part that creates an array of clusters (after cluster_map is final) in a separate function
 
+
 // member_cnt is needed to know how many fields to use in a given observation
+
 int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
+	print_centroids(centroids, k, member_cnt);
 	clusters_sizes = (int *) calloc(k, sizeof(int));
 	int *clusters_map = (int *) calloc(pixel_cnt, sizeof(int));
 
 	if (pixel_cnt < k) {
 		fprintf(stderr, "Could not compute clusters.");
 
-		for (int i = 0; i < k; ++i)
+		for (int i = 0; i < k; i++)
 			free(centroids[i]);
 		free(centroids);
 		free(clusters_map);
@@ -101,7 +121,9 @@ int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int 
 	}
 
 	while (1) {
+		print_centroids(centroids, k, member_cnt);
 		int *new_clusters_map = partition(pixels, centroids, k, pixel_cnt, member_cnt);
+		print_centroids(centroids, k, member_cnt);
 
 		if (compare_clusters(clusters_map, new_clusters_map, pixel_cnt)) {
 			free(clusters_map);
@@ -110,39 +132,87 @@ int *km(double **centroids, double **pixels, int k, unsigned int pixel_cnt, int 
 
 		free(clusters_map);
 		clusters_map = new_clusters_map;
-		re_centroids(centroids, clusters_map, pixels, k, pixel_cnt, member_cnt);
+		update_centroid(centroids, clusters_map, pixels, k, pixel_cnt, member_cnt);
 	}
 }
 
-double *centroid(double **observations, int observations_size, int vector_size) {
-	double *vector = (double *) calloc(vector_size, sizeof(double));
+double *centroid_mean(double **pixels, unsigned int pixel_cnt, int member_cnt) {
+	double *vector = (double *) calloc(member_cnt, sizeof(double));
 	
-	for (int i = 0; i < observations_size; ++i) {
-		double *temp = vsum(vector, observations[i], vector_size);
+	for (int i = 0; i < pixel_cnt; i++) {
+		double *temp = vsum(vector, pixels[i], member_cnt);
 		free(vector);
 		vector = temp;
 	}
 	
-	for (int i = 0; i < vector_size; ++i)
-		vector[i] /= observations_size;
+	for (int i = 0; i < member_cnt; i++)
+		vector[i] /= pixel_cnt;
 	
 	return vector;
 }
 
+// Used for centroid_mode
+
+typedef struct {
+	double *pixel;
+	unsigned int count;
+} PixelFrequency;
+
+// Similar as centroid_mean, but that calculates the mode instead of mean
+
+// This function will be used to calculate the mode of the pixels in a cluster
+
+// It returns a vector that corresponds to the pixel that occurs the most often in the cluster
+
+double *centroid_mode(double **pixels, unsigned int pixel_cnt, int member_cnt) {
+	PixelFrequency *frequencies = calloc(pixel_cnt, sizeof(PixelFrequency));
+	unsigned int unique_pixel_cnt = 0;
+
+	for (unsigned int i = 0; i < pixel_cnt; i++) {
+		int found = 0;
+		for (unsigned int j = 0; j < unique_pixel_cnt; j++) {
+			if (memcmp(pixels[i], frequencies[j].pixel, member_cnt * sizeof(double)) == 0) {
+				frequencies[j].count++;
+				found = 1;
+				break;
+			}
+		}
+		if (!found) {
+			frequencies[unique_pixel_cnt].pixel = pixels[i];
+			frequencies[unique_pixel_cnt].count = 1;
+			unique_pixel_cnt++;
+		}
+	}
+
+	double *mode = NULL;
+	unsigned int max_count = 0;
+	for (unsigned int i = 0; i < unique_pixel_cnt; i++) {
+		if (frequencies[i].count > max_count) {
+			max_count = frequencies[i].count;
+			mode = frequencies[i].pixel;
+		}
+	}
+
+	free(frequencies);
+	return mode;
+}
+
+
 double *vsum(const double *vector1, const double *vector2, int vector_size) {
 	double *vector = (double *) malloc(sizeof(double) * vector_size);
 	
-	for (int i = 0; i < vector_size; ++i)
+	for (int i = 0; i < vector_size; i++)
 		vector[i] = vector1[i] + vector2[i];
 	
 	return vector;
 }
 
 // Vector substraction
+
 double *vsub(const double *vector1, const double *vector2, int vector_size) {
 	double *vector = (double *) malloc(sizeof(double) * vector_size);
 	
-	for (int i = 0; i < vector_size; ++i)
+	for (int i = 0; i < vector_size; i++)
 		vector[i] = vector1[i] - vector2[i];
 	
 	return vector;
@@ -151,7 +221,7 @@ double *vsub(const double *vector1, const double *vector2, int vector_size) {
 double innerprod(const double *vector1, const double *vector2, int vector_size) {
 	double prod = 0;
 	
-	for (int i = 0; i < vector_size; ++i)
+	for (int i = 0; i < vector_size; i++)
 		prod += vector1[i] * vector2[i];
 	
 	return prod;
@@ -161,30 +231,31 @@ double norm(const double *vector, int vector_size) {
 	return sqrt(innerprod(vector, vector, vector_size));
 }
 
-/* Loved this shuffling random algorithm
- * Source: http://stackoverflow.com/a/5064432
- */
-int rand_num(int size) {
+// Returns a unique random natural from 0 to size-1.
+// Set it up and return a first number by specyfing the range
+// Calling it with range=-1 will return a number not outputted yet
+// range=-2 is just a free
+int rand_num(int range) {
 	static int *numArr = NULL;
 	static int numNums = 0;
 	int i, n;
 	
-	if (size == -22) {
+	if (range == -2) {
 		free(numArr);
 		return -1;
 	}
 	
-	if (size >= 0) {
+	if (range >= 0) {
 		if (numArr != NULL)
 			free(numArr);
 		
-		if ((numArr = (int *) malloc(sizeof(int) * size)) == NULL)
+		if ((numArr = (int *) malloc(sizeof(int) * range)) == NULL)
 			return -1;
 		
-		for (i = 0; i < size; ++i)
+		for (i = 0; i < range; i++)
 			numArr[i] = i;
 		
-		numNums = size;
+		numNums = range;
 	}
 	
 	if (numNums == 0)
@@ -209,17 +280,21 @@ double **create_centroids(double **pixels, int k, unsigned int pixel_cnt, int me
 	srand(time(NULL));
 	int r = rand_num(pixel_cnt);
 
-	// TODO an immediate and probably necessary improvement to this is to pick centroids at random until we have k unique ones
-	//  One way would be to stratify by alpha (take min alpha, max alpha, and divisions in between)
+	// Pick random pixels as centroids, without replacement
 	for (int cluster_idx = 0; cluster_idx < k; ++cluster_idx) {
 		centroids[cluster_idx] = (double *) malloc(sizeof(double) * member_cnt);
-		for (int j = 0; j < member_cnt; ++j) {
+		dbg_printf("Using pixel %d for centroid %d\n", r, cluster_idx);
+		for (int j = 0; j < member_cnt; j++) {
 			centroids[cluster_idx][j] = pixels[r][j];
-			r = rand_num(-1);
 		}
+		r = rand_num(-1);
 	}
 
-	rand_num(-22);
+#ifdef DEBUG
+	print_centroids(centroids, k, member_cnt);
+#endif
+
+	rand_num(-2); // free
 
 	return centroids;
 }
@@ -229,7 +304,7 @@ int *partition(double **pixels, double **centroids, int k, unsigned int pixel_cn
 	float curr_distance;
 	int centroid;
 
-	for (int i = 0; i < pixel_cnt; ++i) {
+	for (int i = 0; i < pixel_cnt; i++) {
 		float min_distance = DBL_MAX;
 
 		for (int c = 0; c < k; c++) {
@@ -249,11 +324,11 @@ int *partition(double **pixels, double **centroids, int k, unsigned int pixel_cn
 	return clusters_map;
 }
 
-void re_centroids(double **centroids, int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int member_count) {
+void update_centroid(double **centroids, int *clusters_map, double **pixels, int k, unsigned int pixel_cnt, int member_cnt) {
 	double **temp_arr = (double **) malloc(sizeof(double *) * pixel_cnt);
 
 	for (int cluster_idx = 0, count = 0; cluster_idx < k; ++cluster_idx) {
-		for (int i = 0; i < pixel_cnt; ++i) {
+		for (int i = 0; i < pixel_cnt; i++) {
 			int curr = clusters_map[i];
 
 			if (curr == cluster_idx) {
@@ -262,27 +337,32 @@ void re_centroids(double **centroids, int *clusters_map, double **pixels, int k,
 			}
 		}
 
-		centroids[cluster_idx] = centroid(temp_arr, count, member_count);
+		if (kmodes) {
+			centroids[cluster_idx] = centroid_mode(temp_arr, count, member_cnt);
+		} else {
+			centroids[cluster_idx] = centroid_mean(temp_arr, count, member_cnt);
+		}
+		print_centroids(centroids, k, member_cnt);
 		count = 0;
 	}
 
 	free(temp_arr);
 }
 
-double ***map_clusters(int *clusters_map, double **observations, int k, int observations_size, int vector_size) {
+double ***map_clusters(int *clusters_map, double **observations, int k, unsigned int pixel_cnt, int vector_size) {
 	double ***clusters = (double ***) malloc(sizeof(double **) * k);
 	
-	for (int i = 0; i < k; ++i)
-		clusters[i] = map_cluster(clusters_map, observations, i, observations_size, vector_size);
+	for (int i = 0; i < k; i++)
+		clusters[i] = map_cluster(clusters_map, observations, i, pixel_cnt, vector_size);
 	
 	return clusters;
 }
 
-double **map_cluster(const int *clusters_map, double **observations, int c, int observations_size, int vector_size) {
+double **map_cluster(const int *clusters_map, double **observations, int c, unsigned int pixel_cnt, int vector_size) {
 	int count = 0;
-	int *temp_arr = (int *) malloc(sizeof(int) * observations_size);
+	int *temp_arr = (int *) malloc(sizeof(int) * pixel_cnt);
 	
-	for (int i = 0; i < observations_size; ++i) {
+	for (int i = 0; i < pixel_cnt; i++) {
 		if (clusters_map[i] == c) {
 			temp_arr[count] = i;
 			++count;
@@ -291,7 +371,7 @@ double **map_cluster(const int *clusters_map, double **observations, int c, int 
 	
 	double **cluster = (double **) malloc(sizeof(double *) * count);
 	
-	for (int i = 0; i < count; ++i)
+	for (int i = 0; i < count; i++)
 		cluster[i] = observations[temp_arr[i]];
 	
 	free(temp_arr);
